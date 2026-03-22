@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>BMCyt Counter — Células Bucales</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#0a0e14; --surface:#111720; --surface2:#1a2233; --border:#1e2d45;
+    --accent:#00d4ff; --accent2:#7c3aed; --green:#10b981; --yellow:#f59e0b;
+    --red:#ef4444; --text:#e2e8f0; --muted:#64748b;
+    --mono:'Space Mono',monospace; --sans:'DM Sans',sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;
+    background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);
+    background-size:40px 40px;pointer-events:none;z-index:0;}
+  .app{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:16px;}
+
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;
+    padding:12px 0 20px;border-bottom:1px solid var(--border);
+    margin-bottom:18px;flex-wrap:wrap;gap:12px;}
+  .logo{display:flex;align-items:center;gap:12px;}
+  .logo-icon{width:38px;height:38px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+  .logo-text h1{font-family:var(--mono);font-size:14px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;}
+  .logo-text p{font-size:10px;color:var(--muted);letter-spacing:1px;}
+  .header-right{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .header-stats{display:flex;gap:20px;}
+  .hstat{text-align:right;}
+  .hstat-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);}
+  .hstat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
+
+  /* LANGUAGE TOGGLE */
+  .lang-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:3px;gap:3px;}
+  .lang-btn{padding:6px 14px;border-radius:7px;border:none;background:transparent;
+    color:var(--muted);font-family:var(--mono);font-size:12px;font-weight:700;
+    cursor:pointer;transition:all .2s;letter-spacing:1px;}
+  .lang-btn.active{background:var(--accent);color:#000;}
+  .lang-btn:not(.active):hover{color:var(--text);}
+
+  /* PROGRESS */
+  .progress-section{margin-bottom:16px;}
+  .progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;}
+  .progress-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+  .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s ease;}
+  .milestones{display:flex;gap:4px;margin-top:7px;}
+  .ms{flex:1;text-align:center;font-size:9px;color:var(--muted);font-family:var(--mono);
+    padding:2px;border-radius:3px;border:1px solid transparent;transition:all .3s;}
+  .ms.reached{color:var(--accent);border-color:var(--accent);background:rgba(0,212,255,.08);}
+  .ms.active{color:var(--yellow);border-color:var(--yellow);background:rgba(245,158,11,.1);animation:blink 1.5s infinite;}
+  @keyframes blink{0%,100%{opacity:1}50%{opacity:.5}}
+
+  /* DICTATION BAR */
+  .dictation-bar{position:sticky;top:0;z-index:100;background:var(--bg);padding:10px 0 14px;
+    border-bottom:1px solid var(--border);margin-bottom:18px;}
+  .dictation-inner{display:flex;align-items:center;gap:10px;background:var(--surface);
+    border:2px solid var(--border);border-radius:14px;padding:10px 14px;transition:border-color .2s;}
+  .dictation-inner:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,.12);}
+  .dictation-inner.matched{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.12);animation:matchGlow .4s ease;}
+  .dictation-inner.no-match{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.12);}
+  @keyframes matchGlow{0%{background:var(--surface)}40%{background:rgba(16,185,129,.1)}100%{background:var(--surface)}}
+  .mic-icon{font-size:20px;flex-shrink:0;user-select:none;}
+  .dictation-input{flex:1;background:transparent;border:none;outline:none;
+    font-family:var(--sans);font-size:17px;color:var(--text);font-weight:500;min-width:0;caret-color:var(--accent);}
+  .dictation-input::placeholder{color:var(--muted);font-size:14px;}
+  .dictation-status{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
+  .dictation-status.ok{color:var(--green);}
+  .dictation-status.err{color:var(--red);}
+  .btn-clear-dict{background:transparent;border:none;color:var(--muted);font-size:18px;
+    cursor:pointer;flex-shrink:0;padding:2px 5px;border-radius:4px;transition:color .15s;line-height:1;}
+  .btn-clear-dict:hover{color:var(--red);}
+
+  /* HOW-TO */
+  .how-to{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:6px;margin-top:10px;}
+  .how-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;}
+  .how-card-title{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:5px;}
+  .how-card-body{font-size:10px;color:var(--muted);line-height:1.75;}
+  .how-card-body kbd{background:var(--surface);border:1px solid var(--border);border-radius:4px;
+    padding:1px 6px;font-family:var(--mono);font-size:10px;color:var(--text);}
+
+  /* KEYBOARD SHORTCUT GRID — shown in how-to */
+  .shortcut-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin-top:4px;}
+  .sk{display:contents;}
+  .sk kbd{justify-self:center;}
+  .sk span{font-size:10px;color:var(--muted);align-self:center;}
+
+  /* CHIPS */
+  .chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;}
+  .chip{background:var(--surface2);border:1px solid var(--border);border-radius:99px;
+    padding:4px 11px;font-size:11px;font-family:var(--mono);color:var(--muted);
+    cursor:pointer;transition:all .15s;user-select:none;-webkit-tap-highlight-color:transparent;touch-action:manipulation;}
+  .chip:hover,.chip:active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.08);}
+  .chip.undo{border-color:var(--red);color:var(--red);}
+  .chip.undo:hover,.chip.undo:active{background:rgba(239,68,68,.1);}
+
+  /* MAIN GRID */
+  .main-grid{display:grid;grid-template-columns:1fr 310px;gap:18px;}
+
+  /* CELLS */
+  .cells-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .section-label{grid-column:1/-1;font-size:9px;text-transform:uppercase;letter-spacing:2px;
+    color:var(--muted);font-family:var(--mono);padding-bottom:4px;border-bottom:1px solid var(--border);margin-top:4px;}
+  .cell-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
+    padding:12px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;
+    user-select:none;-webkit-tap-highlight-color:transparent;}
+  .cell-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
+    background:var(--card-color,var(--accent));opacity:0;transition:opacity .2s;}
+  .cell-card:hover,.cell-card:active{border-color:var(--card-color,var(--accent));transform:translateY(-1px);background:var(--surface2);}
+  .cell-card:hover::before,.cell-card:active::before{opacity:1;}
+  .cell-card.flash{animation:cardFlash .28s ease;}
+  @keyframes cardFlash{0%{transform:scale(1)}45%{transform:scale(.96);background:var(--surface2);border-color:var(--card-color)}100%{transform:scale(1)}}
+  .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:7px;}
+  .card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
+  .card-voice{font-family:var(--mono);font-size:8px;color:var(--card-color,var(--accent));
+    background:rgba(255,255,255,.04);border:1px solid currentColor;
+    padding:2px 5px;border-radius:4px;white-space:nowrap;flex-shrink:0;opacity:.75;}
+  .card-count{font-family:var(--mono);font-size:36px;font-weight:700;
+    color:var(--card-color,var(--accent));line-height:1;margin-bottom:4px;}
+  .card-tag{display:inline-block;font-size:8px;text-transform:uppercase;letter-spacing:1px;
+    padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.05);color:var(--muted);margin-bottom:6px;}
+  .card-desc{font-size:9px;color:var(--muted);line-height:1.5;}
+  .card-bar{height:3px;background:var(--surface2);border-radius:99px;margin-top:9px;overflow:hidden;}
+  .card-bar-fill{height:100%;background:var(--card-color,var(--accent));border-radius:99px;transition:width .3s;opacity:.65;}
+  .btn-row{display:flex;gap:6px;margin-top:9px;}
+  .btn-inc,.btn-dec,.btn-rst{flex:1;background:transparent;border:1px solid var(--border);
+    color:var(--muted);border-radius:6px;padding:5px 0;font-size:14px;cursor:pointer;
+    transition:all .15s;font-family:var(--mono);touch-action:manipulation;}
+  .btn-inc:hover,.btn-inc:active{background:var(--card-color);color:#000;border-color:var(--card-color);}
+  .btn-dec:hover,.btn-dec:active{background:var(--surface2);color:var(--text);border-color:var(--muted);}
+  .btn-rst:hover,.btn-rst:active{background:rgba(239,68,68,.12);color:var(--red);border-color:var(--red);}
+
+  /* RIGHT */
+  .right-panel{display:flex;flex-direction:column;gap:14px;}
+  .summary-panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px;flex:1;}
+  .panel-title{font-family:var(--mono);font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:12px;}
+  .summary-row{display:grid;grid-template-columns:1fr auto auto;gap:6px;align-items:center;
+    padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
+  .summary-row:last-child{border-bottom:none;}
+  .s-name{color:var(--muted);}
+  .s-val{font-family:var(--mono);font-weight:700;text-align:right;}
+  .s-pct{font-size:9px;color:var(--muted);font-family:var(--mono);text-align:right;min-width:34px;}
+  .summary-total{margin-top:10px;padding-top:10px;border-top:2px solid var(--border);
+    display:grid;grid-template-columns:1fr auto auto;gap:6px;font-size:13px;font-weight:700;}
+  .actions-panel{display:flex;flex-direction:column;gap:7px;}
+  .btn-action{padding:10px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+    color:var(--text);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;
+    transition:all .18s;display:flex;align-items:center;gap:8px;touch-action:manipulation;width:100%;}
+  .btn-action:hover,.btn-action:active{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
+  .btn-action.danger:hover,.btn-action.danger:active{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08);}
+  .btn-action.success-btn{border-color:var(--green);color:var(--green);}
+  .btn-action.success-btn:hover{background:rgba(16,185,129,.08);}
+  #csvFileInput{display:none;}
+
+  /* NOTIFICATION */
+  .notification{position:fixed;top:16px;right:16px;background:var(--surface2);
+    border:1px solid var(--accent);color:var(--accent);padding:10px 18px;
+    border-radius:10px;font-family:var(--mono);font-size:12px;z-index:1000;
+    opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none;max-width:300px;}
+  .notification.show{opacity:1;transform:translateY(0);}
+  .notification.error{border-color:var(--red);color:var(--red);}
+  .notification.success{border-color:var(--green);color:var(--green);}
+
+  /* MODAL */
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(4px);
+    z-index:500;display:none;align-items:center;justify-content:center;padding:16px;}
+  .modal-overlay.open{display:flex;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;
+    padding:24px;max-width:640px;width:100%;max-height:85vh;overflow-y:auto;}
+  .modal h2{font-family:var(--mono);font-size:14px;color:var(--accent);margin-bottom:18px;letter-spacing:1px;}
+  .modal table{width:100%;border-collapse:collapse;font-size:12px;}
+  .modal th{text-align:left;padding:7px 10px;font-family:var(--mono);font-size:9px;
+    text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
+  .modal td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text);}
+  .modal td:nth-child(3),.modal td:nth-child(4),.modal td:nth-child(5){font-family:var(--mono);font-weight:700;}
+  .modal-footer{margin-top:14px;background:var(--surface2);border-radius:8px;padding:10px;
+    font-size:11px;color:var(--muted);font-family:var(--mono);line-height:1.8;}
+  .modal-close{margin-top:16px;padding:9px 22px;background:var(--surface2);border:1px solid var(--border);
+    color:var(--text);border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:13px;transition:all .18s;}
+  .modal-close:hover{border-color:var(--accent);color:var(--accent);}
+
+  ::-webkit-scrollbar{width:5px;}
+  ::-webkit-scrollbar-track{background:var(--bg);}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+
+  @media(max-width:920px){
+    .main-grid{grid-template-columns:1fr;}
+    .right-panel{flex-direction:row;flex-wrap:wrap;}
+    .summary-panel{flex:1;min-width:260px;}
+    .actions-panel{flex-direction:row;flex-wrap:wrap;flex:1;min-width:200px;}
+    .btn-action{flex:1;min-width:140px;}
+  }
+  @media(max-width:580px){
+    .cells-panel{grid-template-columns:1fr;}
+    header{flex-direction:column;align-items:flex-start;}
+    .how-to{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+<div class="app">
+
+  <header>
+    <div class="logo">
+      <div class="logo-icon">🔬</div>
+      <div class="logo-text">
+        <h1>BMCyt Counter</h1>
+        <p>HUMNxl · Bolognesi 2013 · Thomas 2009</p>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="lang-toggle">
+        <button class="lang-btn active" id="btnES" onclick="setLang('es')">ES</button>
+        <button class="lang-btn"         id="btnEN" onclick="setLang('en')">EN</button>
+      </div>
+      <div class="header-stats">
+        <div class="hstat"><div class="hstat-val" id="totalCount">0</div><div class="hstat-label" id="lbl-totalH">Total</div></div>
+        <div class="hstat"><div class="hstat-val" id="pctCount">0%</div><div class="hstat-label" id="lbl-avance">Avance</div></div>
+        <div class="hstat"><div class="hstat-val" id="remainCount">2000</div><div class="hstat-label" id="lbl-rest">Restantes</div></div>
+      </div>
+    </div>
+  </header>
+
+  <div class="progress-section">
+    <div class="progress-labels"><span id="lbl-prog">PROGRESO</span><span id="progressLabel">0 / 2000</span></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="milestones">
+      <div class="ms" id="ms500">500</div>
+      <div class="ms" id="ms1000">1000 ★</div>
+      <div class="ms" id="ms1500">1500</div>
+      <div class="ms" id="ms2000">2000 ✓</div>
+    </div>
+  </div>
+
+  <!-- DICTATION BAR -->
+  <div class="dictation-bar">
+    <div class="dictation-inner" id="dictInner">
+      <span class="mic-icon" id="dictLangIcon">🎙️ ES</span>
+      <input type="text" id="dictInput" class="dictation-input"
+        placeholder="Activa el dictado del teclado y di el tipo de célula…"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <span class="dictation-status" id="dictStatus">Listo</span>
+      <button class="btn-clear-dict" id="btnClearDict" onclick="manualClear()" title="Borrar">×</button>
+    </div>
+    <div class="how-to" id="howToGrid"></div>
+    <div class="chips" id="chipsRow"></div>
+  </div>
+
+  <div class="main-grid">
+    <div class="cells-panel" id="cellsGrid"></div>
+
+    <div class="right-panel">
+      <div class="summary-panel">
+        <div class="panel-title" id="summaryTitle">Resumen de Conteo</div>
+        <div id="summaryRows"></div>
+        <div class="summary-total">
+          <span style="color:var(--text)" id="labelTotal">TOTAL</span>
+          <span style="color:var(--accent);font-family:var(--mono)" id="summaryTotal">0</span>
+          <span style="color:var(--accent);font-family:var(--mono);font-size:11px" id="summaryPct">0%</span>
+        </div>
+      </div>
+      <div class="actions-panel">
+        <button class="btn-action"            onclick="showReport()">📊 <span id="lbl-report">Reporte completo</span></button>
+        <button class="btn-action success-btn" onclick="exportCSV()">⬇️ <span id="lbl-export">Guardar sesión (CSV)</span></button>
+        <button class="btn-action"            onclick="document.getElementById('csvFileInput').click()">📂 <span id="lbl-import">Cargar sesión (CSV)</span></button>
+        <input type="file" id="csvFileInput" accept=".csv" onchange="importCSV(event)">
+        <button class="btn-action"            onclick="undoLast()">↩️ <span id="lbl-undo">Deshacer último</span></button>
+        <button class="btn-action danger"     onclick="confirmReset()">🗑️ <span id="lbl-reset">Reiniciar todo</span></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notification" id="notification"></div>
+
+<div class="modal-overlay" id="reportModal">
+  <div class="modal">
+    <h2 id="reportTitle">📊 REPORTE BMCyt</h2>
+    <table>
+      <thead><tr>
+        <th id="th-cat">Categoría</th><th id="th-type">Tipo celular</th>
+        <th id="th-count">Conteo</th><th>%</th><th id="th-per">/ 1000 cél.</th>
+      </tr></thead>
+      <tbody id="reportBody"></tbody>
+    </table>
+    <div class="modal-footer" id="reportFooter"></div>
+    <button class="modal-close" id="btnClose" onclick="closeModal()">Cerrar</button>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CELL DEFINITIONS
+// ═══════════════════════════════════════════════════════
+const CELL_DEFS = [
+  { key:'diferenciada',
+    labelEs:'Célula Diferenciada', labelEn:'Differentiated Cell',
+    catEs:'Normal', catEn:'Normal', color:'#10b981',
+    voiceEs:'"normal"·"dife"', voiceEn:'"normal"·"diff"',
+    tagEs:'Normal · Genotóx.', tagEn:'Normal · Genotox.',
+    descEs:'Núcleo oval uniforme. Citoplasma angular y plano. Estrato córneo.',
+    descEn:'Uniform oval nucleus. Angular flat cytoplasm. Stratum corneum.' },
+
+  { key:'basal',
+    labelEs:'Célula Basal', labelEn:'Basal Cell',
+    catEs:'Normal', catEn:'Normal', color:'#06b6d4',
+    voiceEs:'"basal"', voiceEn:'"basal"',
+    tagEs:'Proliferación · Citotóx.', tagEn:'Proliferation · Cytotox.',
+    descEs:'Mayor relación núcleo:citoplasma. Citoplasma oscuro. Estrato basal.',
+    descEn:'Large nucleus:cytoplasm ratio. Darker cytoplasm. Basal layer.' },
+
+  { key:'micronucleo',
+    labelEs:'Célula con Micronúcleo', labelEn:'Micronucleated Cell',
+    catEs:'Genotóxica', catEn:'Genotoxic', color:'#f59e0b',
+    voiceEs:'"micro"·"mn"', voiceEn:'"micro"·"mn"',
+    tagEs:'Genotóxica · Daño ADN', tagEn:'Genotoxic · DNA damage',
+    descEs:'MN redondo/oval (1/16–1/3 núcleo). Feulgen+. Sin contacto con núcleo principal.',
+    descEn:'Round/oval MN (1/16–1/3 nucleus). Feulgen+. No contact with main nucleus.' },
+
+  { key:'nbud',
+    labelEs:'Gema Nuclear (NBUD)', labelEn:'Nuclear Bud (NBUD)',
+    catEs:'Genotóxica', catEn:'Genotoxic', color:'#a78bfa',
+    voiceEs:'"gema"·"brote"', voiceEn:'"bud"·"nbud"',
+    tagEs:'Genotóxica · Amplif. gen.', tagEn:'Genotoxic · Gene amplif.',
+    descEs:'Constrición aguda formando brote unido por puente nucleoplasmático. Incluye "broken egg".',
+    descEn:'Sharp constriction forming bud attached by nucleoplasmic bridge. Includes "broken egg".' },
+
+  { key:'binucleada',
+    labelEs:'Célula Binucleada', labelEn:'Binucleated Cell',
+    catEs:'Genotóxica', catEn:'Genotoxic', color:'#ec4899',
+    voiceEs:'"bi"·"binucleada"', voiceEn:'"bi"·"binucleated"',
+    tagEs:'Genotóxica · Citocinesis', tagEn:'Genotoxic · Cytokinesis',
+    descEs:'Dos núcleos de igual tamaño e intensidad de tinción. Defecto de citocinesis.',
+    descEn:'Two nuclei of equal size and staining. Cytokinesis defect.' },
+
+  { key:'cromatina',
+    labelEs:'Cromatina Condensada', labelEn:'Condensed Chromatin',
+    catEs:'Citotóxica', catEn:'Cytotoxic', color:'#f97316',
+    voiceEs:'"croma"·"cond"', voiceEn:'"chroma"·"cond"',
+    tagEs:'Citotóxica · Apoptosis temprana', tagEn:'Cytotoxic · Early apoptosis',
+    descEs:'Patrón estriado paralelo. Áreas intensamente teñidas. No puntuar MN.',
+    descEn:'Striated parallel pattern. Intensely stained areas. Do not score MN.' },
+
+  { key:'cariorrexis',
+    labelEs:'Cariorrexis', labelEn:'Karyorrhexis',
+    catEs:'Citotóxica', catEn:'Cytotoxic', color:'#ef4444',
+    voiceEs:'"cario"·"rexis"', voiceEn:'"karyo"·"rexis"',
+    tagEs:'Citotóxica · Apoptosis tardía', tagEn:'Cytotoxic · Late apoptosis',
+    descEs:'Mayor agregación que CC. Patrón moteado denso. Fragmentación nuclear. No puntuar MN.',
+    descEn:'More aggregation than CC. Dense speckled pattern. Nuclear fragmentation. No MN.' },
+
+  { key:'picnosis',
+    labelEs:'Picnosis', labelEn:'Pyknosis',
+    catEs:'Citotóxica', catEn:'Cytotoxic', color:'#fb923c',
+    voiceEs:'"picno"·"picnosis"', voiceEn:'"pyk"·"pyknosis"',
+    tagEs:'Citotóxica · Apoptosis', tagEn:'Cytotoxic · Apoptosis',
+    descEs:'Núcleo pequeño contraído (diámetro 1/3–2/3 del normal). Intensamente teñido y uniforme.',
+    descEn:'Small shrunken nucleus (1/3–2/3 normal diameter). Uniformly and intensely stained.' },
+
+  { key:'cariolisis',
+    labelEs:'Cariolisis', labelEn:'Karyolysis',
+    catEs:'Citotóxica', catEn:'Cytotoxic', color:'#64748b',
+    voiceEs:'"lisis"·"cariolisis"', voiceEn:'"lysis"·"karyolysis"',
+    tagEs:'Citotóxica · Necrosis', tagEn:'Cytotoxic · Necrosis',
+    descEs:'Sin ADN detectable. Imagen fantasma del núcleo. Disolución nuclear completa.',
+    descEn:'No detectable DNA. Ghost-like nucleus. Complete nuclear dissolution.' },
+];
+
+const SECTION_KEYS = [
+  ['diferenciada','basal'],
+  ['micronucleo','nbud','binucleada'],
+  ['cromatina','cariorrexis','picnosis','cariolisis'],
+];
+
+// ═══════════════════════════════════════════════════════
+// COMMAND MAPS
+// Wide synonym lists — especially for words OS mispronounces
+// ═══════════════════════════════════════════════════════
+const CMD_ES = [
+  { w:['normal','dife','diferenciada','diferenciado','dif','diferente','diferencia'],  k:'diferenciada' },
+  { w:['basal','bazal','basar'],                                                       k:'basal' },
+  { w:['micro','mn','micronucleo','micronucleos','micronuclei','micronucleado'],        k:'micronucleo' },
+  { w:['gema','brote','nbud','bud','gemas','yema','neobrote'],                         k:'nbud' },
+  { w:['bi','binucleada','binucleado','binuclear','dos nucleos','dos núcleos'],         k:'binucleada' },
+  { w:['croma','cond','condensada','cromatina','cro','cromatin'],                      k:'cromatina' },
+  { w:['cario','rexis','cariorrexis','kariorrexis','cariorexis','kariorrhectic','carior'], k:'cariorrexis' },
+  // Picnosis: many phonetic variants the OS might produce
+  { w:['picno','picnosis','piknosis','picnósis','picnotica','picnótica','picnotico',
+       'picnótico','pik','pic','pico','picknosis','piknósis','picnósis','picnosia',
+       'pickup','picnic','piknótica','piknótico','pyknosis','pyk'],                    k:'picnosis' },
+  { w:['lisis','cariolisis','cariolísis','cariólisis','lisos','liso'],                 k:'cariolisis' },
+];
+
+const CMD_EN = [
+  { w:['normal','differentiated','diff','diferenciada','different'],                   k:'diferenciada' },
+  { w:['basal'],                                                                       k:'basal' },
+  { w:['micro','mn','micronucleus','micronucleated','micronuclei'],                    k:'micronucleo' },
+  { w:['bud','nbud','nuclear','broken'],                                               k:'nbud' },
+  { w:['bi','binucleated','binucleate','binuclear'],                                   k:'binucleada' },
+  { w:['chroma','chromatin','condensed','cond'],                                       k:'cromatina' },
+  { w:['karyo','karyorrhexis','karyorrhectic','rexis','kario'],                        k:'cariorrexis' },
+  { w:['pyk','pyknosis','pyknotic','pick','pik','pic'],                                k:'picnosis' },
+  { w:['lysis','karyolysis','karyolytic'],                                             k:'cariolisis' },
+];
+
+// ═══════════════════════════════════════════════════════
+// KEYBOARD SHORTCUT MAP
+// ═══════════════════════════════════════════════════════
+const KEY_MAP = {
+  n:'diferenciada', b:'basal', m:'micronucleo', g:'nbud',
+  i:'binucleada',   c:'cromatina', r:'cariorrexis', p:'picnosis', l:'cariolisis',
+};
+
+// ═══════════════════════════════════════════════════════
+// UI STRINGS (bilingual)
+// ═══════════════════════════════════════════════════════
+const UI = {
+  es: {
+    sections:['Células Normales','Daño Genómico (Genotoxicidad)','Muerte Celular (Citotoxicidad)'],
+    summaryTitle:'Resumen de Conteo', total:'TOTAL',
+    totalH:'Total', avance:'Avance', rest:'Restantes', prog:'PROGRESO',
+    report:'Reporte completo', export:'Guardar sesión (CSV)', import:'Cargar sesión (CSV)',
+    undo:'Deshacer último', reset:'Reiniciar todo', close:'Cerrar',
+    placeholder:'Activa el dictado del teclado y di el tipo de célula…',
+    reportTitle:'📊 REPORTE BMCyt',
+    thCat:'Categoría', thType:'Tipo celular', thCount:'Conteo', thPer:'/ 1000 cél.',
+    chips:     ['normal','basal','micro','gema','bi','croma','cario','picno','lisis'],
+    chipsKeys: ['diferenciada','basal','micronucleo','nbud','binucleada','cromatina','cariorrexis','picnosis','cariolisis'],
+    undoChip:'↩ deshacer',
+    undoWords:['deshacer','borrar','eliminar','quitar','undo'],
+    notifGoal:'¡Meta de 2000 células alcanzada!', notifDone:'🎉 ¡2000 células completadas!',
+    notifUndo:'↩ Deshecho: ', notifNoUndo:'Sin acciones para deshacer',
+    notifReset:'Conteo reiniciado', notifExport:'Sesión guardada como CSV',
+    notifImport:'Sesión cargada correctamente',
+    notifImportErr:'Error al leer el CSV. Usa un archivo exportado desde esta app.',
+    feedbackOk:'✓ ', feedbackMulti:' registradas', feedbackErr:'No reconocido: ',
+    confirmReset:'¿Reiniciar el conteo completo? No se puede deshacer.',
+    rTotal:'Total', rDiff:'Dif+Genotóx.', rMN:'MN freq.', rNBUD:'NBUD freq.',
+    rDeath:'Muerte celular (CC+KR+PN+KL)', rDate:'Fecha', rProto:'Protocolo',
+    howTo:[
+      { title:'📱 Móvil (iOS / Android)',
+        body:'1. Toca el campo de texto<br>2. Pulsa 🎙️ en el teclado<br>3. Di el nombre de la célula<br>4. Pausa breve → se registra automáticamente' },
+      { title:'🍎 Mac',
+        body:'1. Haz clic en el campo<br>2. Presiona <kbd>Fn</kbd> <kbd>Fn</kbd> dos veces<br>3. Di el nombre de la célula<br>4. Pausa breve → se registra automáticamente' },
+      { title:'🪟 Windows',
+        body:'1. Haz clic en el campo<br>2. Presiona <kbd>Win</kbd> + <kbd>H</kbd><br>3. Di el nombre de la célula<br>4. Pausa breve → se registra automáticamente' },
+      { title:'⌨️ Atajos de teclado',
+        body:`<div class="shortcut-grid">
+          <div class="sk"><kbd>N</kbd><span>Célula Normal</span></div>
+          <div class="sk"><kbd>B</kbd><span>Basal</span></div>
+          <div class="sk"><kbd>M</kbd><span>Micronúcleo</span></div>
+          <div class="sk"><kbd>G</kbd><span>Gema (NBUD)</span></div>
+          <div class="sk"><kbd>I</kbd><span>Binucleada</span></div>
+          <div class="sk"><kbd>C</kbd><span>Crom. Condensada</span></div>
+          <div class="sk"><kbd>R</kbd><span>Cariorrexis</span></div>
+          <div class="sk"><kbd>P</kbd><span>Picnosis</span></div>
+          <div class="sk"><kbd>L</kbd><span>Cariolisis</span></div>
+          <div class="sk"><kbd>Z</kbd><span>Deshacer último</span></div>
+        </div><small style="color:var(--yellow);font-size:9px">Funcionan siempre, incluso con el campo activo</small>` },
+    ],
+  },
+  en: {
+    sections:['Normal Cells','Genomic Damage (Genotoxicity)','Cell Death (Cytotoxicity)'],
+    summaryTitle:'Count Summary', total:'TOTAL',
+    totalH:'Total', avance:'Progress', rest:'Remaining', prog:'PROGRESS',
+    report:'Full Report', export:'Save session (CSV)', import:'Load session (CSV)',
+    undo:'Undo last', reset:'Reset all', close:'Close',
+    placeholder:'Activate keyboard dictation and say the cell type…',
+    reportTitle:'📊 BMCyt REPORT',
+    thCat:'Category', thType:'Cell type', thCount:'Count', thPer:'/ 1000 cells',
+    chips:     ['normal','basal','micro','bud','bi','chroma','karyo','pyk','lysis'],
+    chipsKeys: ['diferenciada','basal','micronucleo','nbud','binucleada','cromatina','cariorrexis','picnosis','cariolisis'],
+    undoChip:'↩ undo',
+    undoWords:['undo','delete','remove','erase','deshacer'],
+    notifGoal:'Goal of 2000 cells reached!', notifDone:'🎉 2000 cells completed!',
+    notifUndo:'↩ Undone: ', notifNoUndo:'Nothing to undo',
+    notifReset:'Count reset', notifExport:'Session saved as CSV',
+    notifImport:'Session loaded successfully',
+    notifImportErr:'Error reading CSV. Please use a file exported from this app.',
+    feedbackOk:'✓ ', feedbackMulti:' registered', feedbackErr:'Not recognized: ',
+    confirmReset:'Reset the entire count? This cannot be undone.',
+    rTotal:'Total', rDiff:'Diff+Genotox.', rMN:'MN freq.', rNBUD:'NBUD freq.',
+    rDeath:'Cell death (CC+KR+PN+KL)', rDate:'Date', rProto:'Protocol',
+    howTo:[
+      { title:'📱 Mobile (iOS / Android)',
+        body:'1. Tap the text field<br>2. Tap 🎙️ on the keyboard<br>3. Say the cell type<br>4. Brief pause → registers automatically' },
+      { title:'🍎 Mac',
+        body:'1. Click the field<br>2. Press <kbd>Fn</kbd> <kbd>Fn</kbd> twice<br>3. Say the cell type<br>4. Brief pause → registers automatically' },
+      { title:'🪟 Windows',
+        body:'1. Click the field<br>2. Press <kbd>Win</kbd> + <kbd>H</kbd><br>3. Say the cell type<br>4. Brief pause → registers automatically' },
+      { title:'⌨️ Keyboard shortcuts',
+        body:`<div class="shortcut-grid">
+          <div class="sk"><kbd>N</kbd><span>Normal / Differentiated</span></div>
+          <div class="sk"><kbd>B</kbd><span>Basal</span></div>
+          <div class="sk"><kbd>M</kbd><span>Micronucleus</span></div>
+          <div class="sk"><kbd>G</kbd><span>Nuclear Bud (NBUD)</span></div>
+          <div class="sk"><kbd>I</kbd><span>Binucleated</span></div>
+          <div class="sk"><kbd>C</kbd><span>Cond. Chromatin</span></div>
+          <div class="sk"><kbd>R</kbd><span>Karyorrhexis</span></div>
+          <div class="sk"><kbd>P</kbd><span>Pyknosis</span></div>
+          <div class="sk"><kbd>L</kbd><span>Karyolysis</span></div>
+          <div class="sk"><kbd>Z</kbd><span>Undo last</span></div>
+        </div><small style="color:var(--yellow);font-size:9px">Work at all times, even with field active</small>` },
+    ],
+  },
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+const GOAL = 2000;
+let lang = 'es';
+let cells = {};
+CELL_DEFS.forEach(d => cells[d.key] = 0);
+let hist = [];
+
+// ═══════════════════════════════════════════════════════
+// LANGUAGE
+// ═══════════════════════════════════════════════════════
+function setLang(l) {
+  lang = l;
+  document.getElementById('btnES').className = 'lang-btn'+(l==='es'?' active':'');
+  document.getElementById('btnEN').className = 'lang-btn'+(l==='en'?' active':'');
+  document.getElementById('dictLangIcon').textContent = '🎙️ '+l.toUpperCase();
+  document.getElementById('dictInput').placeholder = UI[l].placeholder;
+  renderGrid(); renderHowTo(); renderChips(); updateSummary(); updateLabels();
+}
+
+function updateLabels() {
+  const u = UI[lang];
+  el('summaryTitle').textContent = u.summaryTitle;
+  el('labelTotal').textContent   = u.total;
+  el('lbl-totalH').textContent   = u.totalH;
+  el('lbl-avance').textContent   = u.avance;
+  el('lbl-rest').textContent     = u.rest;
+  el('lbl-prog').textContent     = u.prog;
+  el('lbl-report').textContent   = u.report;
+  el('lbl-export').textContent   = u.export;
+  el('lbl-import').textContent   = u.import;
+  el('lbl-undo').textContent     = u.undo;
+  el('lbl-reset').textContent    = u.reset;
+  el('btnClose').textContent     = u.close;
+  el('th-cat').textContent       = u.thCat;
+  el('th-type').textContent      = u.thType;
+  el('th-count').textContent     = u.thCount;
+  el('th-per').textContent       = u.thPer;
+}
+
+function el(id){ return document.getElementById(id); }
+
+// ═══════════════════════════════════════════════════════
+// RENDER
+// ═══════════════════════════════════════════════════════
+function renderGrid() {
+  const u = UI[lang];
+  el('cellsGrid').innerHTML = SECTION_KEYS.map((keys,si) =>
+    `<div class="section-label">${u.sections[si]}</div>` +
+    keys.map(key => {
+      const d = CELL_DEFS.find(x=>x.key===key);
+      const label = lang==='es' ? d.labelEs : d.labelEn;
+      const tag   = lang==='es' ? d.tagEs   : d.tagEn;
+      const desc  = lang==='es' ? d.descEs  : d.descEn;
+      const voice = lang==='es' ? d.voiceEs : d.voiceEn;
+      // Find the keyboard shortcut letter for this key
+      const kbShortcut = Object.entries(KEY_MAP).find(([k,v])=>v===key)?.[0]?.toUpperCase() || '';
+      return `
+      <div class="cell-card" style="--card-color:${d.color}" data-key="${key}" onclick="addCell('${key}')">
+        <div class="card-top">
+          <div class="card-name">${label}</div>
+          <div class="card-voice">${voice} · <kbd style="background:var(--surface2);border:1px solid var(--border);border-radius:3px;padding:1px 4px;font-family:var(--mono);font-size:9px;color:var(--text)">${kbShortcut}</kbd></div>
+        </div>
+        <div class="card-count" id="count-${key}">${cells[key]}</div>
+        <div class="card-tag">${tag}</div>
+        <div class="card-desc">${desc}</div>
+        <div class="card-bar"><div class="card-bar-fill" id="bar-${key}" style="width:0%"></div></div>
+        <div class="btn-row">
+          <button class="btn-inc" onclick="event.stopPropagation();addCell('${key}')">＋</button>
+          <button class="btn-dec" onclick="event.stopPropagation();removeCell('${key}')">−</button>
+          <button class="btn-rst" onclick="event.stopPropagation();resetOne('${key}')">↺</button>
+        </div>
+      </div>`;
+    }).join('')
+  ).join('');
+  refreshAllBars();
+}
+
+function renderHowTo() {
+  el('howToGrid').innerHTML = UI[lang].howTo.map(c =>
+    `<div class="how-card"><div class="how-card-title">${c.title}</div><div class="how-card-body">${c.body}</div></div>`
+  ).join('');
+}
+
+function renderChips() {
+  const u = UI[lang];
+  el('chipsRow').innerHTML =
+    u.chips.map((label,i) =>
+      `<span class="chip" onclick="addCell('${u.chipsKeys[i]}')">${label}</span>`
+    ).join('') +
+    `<span class="chip undo" onclick="undoLast()">${u.undoChip}</span>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// COUNTER CORE
+// ═══════════════════════════════════════════════════════
+function getTotal(){ return Object.values(cells).reduce((s,v)=>s+v,0); }
+
+function addCell(key) {
+  if (getTotal()>=GOAL){ showNotif(UI[lang].notifGoal,'success'); return; }
+  cells[key]++;
+  hist.push({key,a:'add'});
+  refreshCard(key); updateProgress(); flash(key);
+}
+
+function removeCell(key) {
+  if(cells[key]>0){ cells[key]--; hist.push({key,a:'sub'}); refreshCard(key); updateProgress(); }
+}
+
+function resetOne(key) {
+  cells[key]=0; hist=hist.filter(h=>h.key!==key);
+  refreshCard(key); updateProgress();
+}
+
+function undoLast() {
+  if(!hist.length){ showNotif(UI[lang].notifNoUndo,'error'); return; }
+  const last=hist.pop();
+  if(last.a==='add') cells[last.key]=Math.max(0,cells[last.key]-1);
+  else cells[last.key]++;
+  refreshCard(last.key); updateProgress();
+  const def=CELL_DEFS.find(d=>d.key===last.key);
+  showNotif(UI[lang].notifUndo+(lang==='es'?def.labelEs:def.labelEn));
+}
+
+function confirmReset() {
+  if(confirm(UI[lang].confirmReset)){
+    CELL_DEFS.forEach(d=>cells[d.key]=0); hist=[];
+    renderGrid(); updateProgress(); updateSummary();
+    showNotif(UI[lang].notifReset);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// DICTATION — "Process then lock" strategy
+//
+// Problem: OS dictation keeps its own internal buffer.
+// When we clear the <input>, the OS may re-inject the
+// previous text on the next input event.
+//
+// Solution: after processing, set cooldownActive=true and
+// clear the field. For the next 450 ms, any new content
+// in the field is silently wiped. This prevents re-injection.
+// After the cooldown, the field is fresh for the next word.
+// ═══════════════════════════════════════════════════════
+const dictInput  = el('dictInput');
+const dictStatus = el('dictStatus');
+const dictInner  = el('dictInner');
+
+let dictTimer     = null;   // debounce timer
+let cooldownActive = false; // true = ignore / clear any new input
+let cooldownTimer  = null;  // timer to end cooldown
+
+dictInput.addEventListener('input', () => {
+  // During cooldown, silently wipe whatever the OS re-injected
+  if (cooldownActive) {
+    dictInput.value = '';
+    return;
+  }
+
+  clearTimeout(dictTimer);
+  const text = dictInput.value.trim();
+  if (!text) return;
+
+  // Fire 700 ms after last keystroke (end of word / pause in speech)
+  dictTimer = setTimeout(triggerProcess, 700);
+});
+
+dictInput.addEventListener('keydown', e => {
+  // ── Shortcut keys work EVEN when the field is focused ──
+  // Single-letter shortcuts: prevent typing the character
+  if (!e.ctrlKey && !e.metaKey && !e.altKey && e.key.length === 1) {
+    const k = e.key.toLowerCase();
+    if (KEY_MAP[k]) {
+      e.preventDefault();   // don't type the character into the field
+      addCell(KEY_MAP[k]);
+      return;
+    }
+    if (k === 'z') {
+      e.preventDefault();
+      undoLast();
+      return;
+    }
+  }
+
+  // Enter → process immediately
+  if (e.key === 'Enter') {
+    clearTimeout(dictTimer);
+    triggerProcess();
+    e.preventDefault();
+  }
+});
+
+function triggerProcess() {
+  const text = dictInput.value.trim();
+  if (!text) return;
+
+  // Activate cooldown BEFORE processing so any event that fires
+  // during the synchronous processing block is also suppressed
+  startCooldown();
+
+  processChunk(text);
+}
+
+function startCooldown() {
+  cooldownActive = true;
+  dictInput.value = '';          // clear immediately
+  clearTimeout(cooldownTimer);
+  cooldownTimer = setTimeout(() => {
+    cooldownActive = false;
+  }, 450);                       // 450 ms lock window
+}
+
+function manualClear() {
+  clearTimeout(dictTimer);
+  startCooldown();
+  setFeedback('', '');
+}
+
+// ── Text matching ─────────────────────────────────────
+function norm(s){
+  return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+}
+
+function matchWord(word, map) {
+  for (const entry of map) {
+    for (const trigger of entry.w) {
+      const t = norm(trigger);
+      if (word === t) return entry.k;
+      if (word.startsWith(t) && t.length >= 3) return entry.k;
+      if (t.startsWith(word) && word.length >= 3) return entry.k;
+    }
+  }
+  return null;
+}
+
+function processChunk(text) {
+  const u    = UI[lang];
+  const pMap = lang==='es' ? CMD_ES : CMD_EN;
+  const fMap = lang==='es' ? CMD_EN : CMD_ES;
+  const words = norm(text).split(/[\s,;.:!?()\-]+/).filter(Boolean);
+
+  // Check undo
+  if (words.some(w => u.undoWords.includes(w))) {
+    undoLast();
+    setFeedback('↩', 'ok');
+    return;
+  }
+
+  // Register every recognisable word in the chunk
+  let count = 0, lastLabel = '';
+  for (const word of words) {
+    const matched = matchWord(word, pMap) || matchWord(word, fMap);
+    if (matched) {
+      addCell(matched);
+      count++;
+      const def = CELL_DEFS.find(d=>d.key===matched);
+      lastLabel = lang==='es' ? def.labelEs : def.labelEn;
+    }
+  }
+
+  if (count === 1) setFeedback(u.feedbackOk + lastLabel, 'ok');
+  else if (count > 1) setFeedback(`✓ ${count}${u.feedbackMulti}`, 'ok');
+  else setFeedback(u.feedbackErr + '"' + text + '"', 'err');
+}
+
+function setFeedback(msg, type) {
+  dictStatus.textContent = msg;
+  dictStatus.className   = 'dictation-status '+(type||'');
+  dictInner.className    = 'dictation-inner '+(type==='ok'?'matched':type==='err'?'no-match':'');
+  clearTimeout(dictInner._t);
+  dictInner._t = setTimeout(()=>{
+    dictInner.className   = 'dictation-inner';
+    dictStatus.textContent = 'Listo';
+    dictStatus.className  = 'dictation-status';
+  }, 2200);
+}
+
+// Global keydown — works when field does NOT have focus
+document.addEventListener('keydown', e => {
+  if (e.target === dictInput) return;  // handled above
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'BUTTON' || e.target.tagName === 'TEXTAREA') return;
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (KEY_MAP[k]) { addCell(KEY_MAP[k]); return; }
+  if (k === 'z') undoLast();
+});
+
+// ═══════════════════════════════════════════════════════
+// UI UPDATE
+// ═══════════════════════════════════════════════════════
+function refreshCard(key) {
+  const cnt = el('count-'+key);
+  if (cnt) cnt.textContent = cells[key];
+  refreshAllBars(); updateSummary();
+}
+
+function refreshAllBars() {
+  const total = getTotal();
+  CELL_DEFS.forEach(d => {
+    const bar = el('bar-'+d.key);
+    if (bar) bar.style.width = total>0 ? (cells[d.key]/total*100)+'%' : '0%';
+  });
+}
+
+function updateProgress() {
+  const total = getTotal();
+  const pct   = Math.min(100, total/GOAL*100);
+  el('totalCount').textContent   = total;
+  el('pctCount').textContent     = pct.toFixed(1)+'%';
+  el('remainCount').textContent  = Math.max(0,GOAL-total);
+  el('progressFill').style.width = pct+'%';
+  el('progressLabel').textContent= total+' / '+GOAL;
+  [500,1000,1500,2000].forEach((m,i,arr)=>{
+    const e2 = el('ms'+m);
+    if(total>=m)                    e2.className='ms reached';
+    else if(total>=(arr[i-1]||0)) e2.className='ms active';
+    else                            e2.className='ms';
+  });
+  if(total===GOAL) showNotif(UI[lang].notifDone,'success');
+}
+
+function updateSummary() {
+  const total = getTotal();
+  el('summaryRows').innerHTML = CELL_DEFS.map(d=>{
+    const label = lang==='es'?d.labelEs:d.labelEn;
+    const pct   = total>0?(cells[d.key]/total*100).toFixed(1):'0.0';
+    return `<div class="summary-row"><span class="s-name">${label}</span><span class="s-val">${cells[d.key]}</span><span class="s-pct">${pct}%</span></div>`;
+  }).join('');
+  el('summaryTotal').textContent = total;
+  el('summaryPct').textContent   = total>0?(total/GOAL*100).toFixed(1)+'%':'0%';
+}
+
+function flash(key) {
+  const card = document.querySelector('[data-key="'+key+'"]');
+  if(!card) return;
+  card.classList.add('flash');
+  setTimeout(()=>card.classList.remove('flash'),300);
+}
+
+// ═══════════════════════════════════════════════════════
+// NOTIFICATION
+// ═══════════════════════════════════════════════════════
+function showNotif(msg,type=''){
+  const n = el('notification');
+  n.textContent=msg; n.className='notification show'+(type?' '+type:'');
+  clearTimeout(n._t); n._t=setTimeout(()=>n.className='notification',2800);
+}
+
+// ═══════════════════════════════════════════════════════
+// REPORT MODAL
+// ═══════════════════════════════════════════════════════
+function showReport(){
+  const u=UI[lang], total=getTotal();
+  el('reportTitle').textContent=u.reportTitle;
+  el('reportBody').innerHTML=CELL_DEFS.map(d=>{
+    const label=lang==='es'?d.labelEs:d.labelEn;
+    const cat  =lang==='es'?d.catEs:d.catEn;
+    const pct  =total>0?(cells[d.key]/total*100).toFixed(2):'0.00';
+    const p1k  =total>0?(cells[d.key]/total*1000).toFixed(2):'0.00';
+    return `<tr><td>${cat}</td><td>${label}</td><td>${cells[d.key]}</td><td>${pct}%</td><td>${p1k}</td></tr>`;
+  }).join('');
+  const diff =cells.diferenciada+cells.micronucleo+cells.nbud+cells.binucleada;
+  const mnF  =diff>0?(cells.micronucleo/diff*1000).toFixed(2):'N/A';
+  const nF   =diff>0?(cells.nbud/diff*1000).toFixed(2):'N/A';
+  const death=cells.cromatina+cells.cariorrexis+cells.picnosis+cells.cariolisis;
+  el('reportFooter').innerHTML=
+    `${u.rTotal}: ${total}/${GOAL} | ${u.rDiff}: ${diff} | ${u.rMN}: ${mnF}/1000 | ${u.rNBUD}: ${nF}/1000<br>`+
+    `${u.rDeath}: ${death} | ${u.rDate}: ${new Date().toLocaleString(lang==='es'?'es-MX':'en-US')}<br>`+
+    `${u.rProto}: BMCyt HUMNxl — Bolognesi et al. 2013 · Thomas et al. 2009`;
+  el('reportModal').classList.add('open');
+}
+
+function closeModal(){ el('reportModal').classList.remove('open'); }
+
+// ═══════════════════════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════════════════════
+function exportCSV(){
+  const total=getTotal(), now=new Date();
+  let csv='#BMCyt_SESSION\n';
+  csv+=`#Date,${now.toISOString()}\n#Protocol,HUMNxl Bolognesi 2013\n#Goal,${GOAL}\n#Lang,${lang}\n\n`;
+  csv+='key,label_es,label_en,category_es,category_en,count,pct,per_1000\n';
+  CELL_DEFS.forEach(d=>{
+    const pct=total>0?(cells[d.key]/total*100).toFixed(2):'0.00';
+    const p1k=total>0?(cells[d.key]/total*1000).toFixed(2):'0.00';
+    csv+=`${d.key},${d.labelEs},${d.labelEn},${d.catEs},${d.catEn},${cells[d.key]},${pct},${p1k}\n`;
+  });
+  csv+=`\n#TOTAL,${total},,,,${total},,\n`;
+  const ds=now.toISOString().replace(/[:.]/g,'-').slice(0,16);
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`BMCyt_session_${ds}.csv`; a.click();
+  showNotif(UI[lang].notifExport,'success');
+}
+
+// ═══════════════════════════════════════════════════════
+// CSV IMPORT
+// ═══════════════════════════════════════════════════════
+function importCSV(event){
+  const file=event.target.files[0]; if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const lines=e.target.result.split('\n'); let loaded=false;
+      for(const line of lines){
+        const t=line.trim();
+        if(!t||t.startsWith('#')||t.startsWith('key,')) continue;
+        const parts=t.split(',');
+        if(parts.length<6) continue;
+        const key=parts[0].trim(), count=parseInt(parts[5].trim(),10);
+        if(cells.hasOwnProperty(key)&&!isNaN(count)&&count>=0){ cells[key]=count; loaded=true; }
+      }
+      if(!loaded) throw new Error('no rows');
+      hist=[]; renderGrid(); updateProgress(); updateSummary();
+      showNotif(UI[lang].notifImport,'success');
+    }catch(err){ showNotif(UI[lang].notifImportErr,'error'); }
+    event.target.value='';
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+renderGrid(); renderHowTo(); renderChips(); updateSummary(); updateProgress(); updateLabels();
+</script>
+</body>
+</html>
