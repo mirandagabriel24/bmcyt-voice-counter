@@ -3,1012 +3,1381 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0a0e14">
 <title>BMCyt Counter</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
+/* ── TOKENS ── */
 :root {
   --bg:#0a0e14; --surface:#111720; --surface2:#1a2233; --border:#1e2d45;
   --accent:#00d4ff; --accent2:#7c3aed; --green:#10b981; --yellow:#f59e0b;
   --red:#ef4444; --text:#e2e8f0; --muted:#64748b;
   --mono:'Space Mono',monospace; --sans:'DM Sans',sans-serif;
-  --tap:48px; /* minimum tap target */
+  --radius:14px; --bar-h:60px; --top-h:112px;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
-body::before{content:'';position:fixed;inset:0;
-  background-image:linear-gradient(rgba(0,212,255,.03) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(0,212,255,.03) 1px,transparent 1px);
-  background-size:40px 40px;pointer-events:none;z-index:0;}
-.app{position:relative;z-index:1;max-width:1400px;margin:0 auto;padding:12px 14px;}
+html,body{height:100%;overscroll-behavior:none;}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);
+  overflow-x:hidden;-webkit-font-smoothing:antialiased;}
 
-/* ── HEADER ── */
-header{display:flex;align-items:center;justify-content:space-between;
-  padding:10px 0 16px;border-bottom:1px solid var(--border);margin-bottom:14px;flex-wrap:wrap;gap:10px;}
-.logo{display:flex;align-items:center;gap:10px;}
-.logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),var(--accent2));
-  border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;}
-.logo-text h1{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:2px;text-transform:uppercase;}
-.logo-text p{font-size:9px;color:var(--muted);letter-spacing:.5px;}
-.header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
-.header-stats{display:flex;gap:16px;}
-.hstat{text-align:right;}
-.hstat-val{font-family:var(--mono);font-size:18px;font-weight:700;color:var(--accent);}
-.hstat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+/* ── SCREENS ── */
+.screen{display:none;flex-direction:column;min-height:100vh;min-height:100dvh;}
+.screen.active{display:flex;}
 
-/* Language toggle */
-.lang-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:3px;}
-.lang-btn{padding:5px 12px;border-radius:6px;border:none;background:transparent;
+/* ══════════════════════════════════════
+   SETUP SCREEN
+══════════════════════════════════════ */
+#scSetup{
+  align-items:center;justify-content:center;
+  padding:24px 20px env(safe-area-inset-bottom,20px);
+  background:var(--bg);
+}
+.setup-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:28px 24px;width:100%;max-width:420px;
+}
+.setup-logo{display:flex;align-items:center;gap:12px;margin-bottom:24px;}
+.setup-logo-icon{
+  width:44px;height:44px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:20px;flex-shrink:0;
+}
+.setup-logo-text h1{font-family:var(--mono);font-size:15px;color:var(--accent);
+  letter-spacing:2px;text-transform:uppercase;}
+.setup-logo-text p{font-size:10px;color:var(--muted);letter-spacing:.5px;margin-top:2px;}
+
+.lang-toggle{display:flex;background:var(--surface2);border:1px solid var(--border);
+  border-radius:9px;padding:3px;gap:3px;margin-left:auto;}
+.lang-btn{padding:6px 14px;border-radius:6px;border:none;background:transparent;
   color:var(--muted);font-family:var(--mono);font-size:11px;font-weight:700;
   cursor:pointer;transition:all .2s;letter-spacing:1px;}
 .lang-btn.active{background:var(--accent);color:#000;}
 
-/* ── PROGRESS ── */
-.progress-section{margin-bottom:14px;}
-.progress-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--muted);font-family:var(--mono);margin-bottom:5px;}
-.progress-track{height:7px;background:var(--surface2);border-radius:99px;overflow:hidden;}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:99px;transition:width .35s ease;}
-.milestones{display:flex;gap:4px;margin-top:6px;}
-.ms{flex:1;text-align:center;font-size:9px;color:var(--muted);font-family:var(--mono);
+.resume-banner{
+  background:rgba(0,212,255,.08);border:1px solid rgba(0,212,255,.25);
+  border-radius:10px;padding:12px 14px;margin-bottom:20px;
+  font-size:12px;color:var(--accent);line-height:1.6;
+}
+.resume-banner strong{display:block;font-size:13px;margin-bottom:4px;}
+
+.form-group{margin-bottom:16px;}
+.form-label{font-size:11px;color:var(--muted);text-transform:uppercase;
+  letter-spacing:.8px;font-family:var(--mono);margin-bottom:6px;display:block;}
+.form-label span{color:var(--red);}
+.form-input{
+  width:100%;background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:14px 16px;color:var(--text);
+  font-family:var(--sans);font-size:16px;outline:none;transition:border-color .2s;
+}
+.form-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
+.form-input::placeholder{color:var(--muted);}
+
+.setup-actions{display:flex;flex-direction:column;gap:10px;margin-top:20px;}
+.btn-start{
+  padding:16px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  color:#000;font-family:var(--sans);font-size:16px;font-weight:700;
+  cursor:pointer;transition:opacity .15s;letter-spacing:.3px;
+}
+.btn-start:active{opacity:.8;}
+.btn-resume{
+  padding:14px;border-radius:12px;border:1px solid var(--accent);
+  background:transparent;color:var(--accent);font-family:var(--sans);
+  font-size:15px;font-weight:600;cursor:pointer;transition:all .15s;
+}
+.btn-resume:active{background:rgba(0,212,255,.1);}
+.btn-new{
+  padding:12px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:var(--sans);
+  font-size:14px;cursor:pointer;transition:all .15s;
+}
+.btn-new:active{color:var(--red);border-color:var(--red);}
+
+/* ══════════════════════════════════════
+   COUNTER SCREEN
+══════════════════════════════════════ */
+#scCounter{background:var(--bg);}
+
+/* ── TOP BAR ── */
+.top-bar{
+  position:sticky;top:0;z-index:100;
+  background:var(--bg);
+  padding:env(safe-area-inset-top,0) 0 0;
+}
+.top-bar-inner{
+  padding:10px 16px 0;
+  border-bottom:1px solid var(--border);
+}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px;}
+.top-logo{display:flex;align-items:center;gap:8px;}
+.top-logo-icon{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;}
+.top-logo-label{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:1.5px;}
+.top-participant{
+  font-size:11px;color:var(--muted);font-family:var(--mono);
+  background:var(--surface2);border:1px solid var(--border);
+  border-radius:6px;padding:3px 8px;cursor:pointer;max-width:140px;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+.top-stats{display:flex;gap:16px;}
+.top-stat{text-align:right;}
+.top-stat-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);line-height:1;}
+.top-stat-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;}
+
+/* progress */
+.progress-wrap{padding:8px 16px 10px;}
+.progress-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
+  border-radius:99px;transition:width .35s ease;width:0%;}
+.milestones{display:flex;gap:4px;margin-top:5px;}
+.ms{flex:1;text-align:center;font-size:8px;color:var(--muted);font-family:var(--mono);
   padding:2px;border-radius:3px;border:1px solid transparent;transition:all .3s;}
 .ms.reached{color:var(--accent);border-color:var(--accent);background:rgba(0,212,255,.08);}
 .ms.active{color:var(--yellow);border-color:var(--yellow);background:rgba(245,158,11,.1);animation:blink 1.5s infinite;}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* ── DICTATION STRIP — minimal, sticky ── */
-.dictation-bar{
-  position:sticky;top:0;z-index:100;background:var(--bg);
-  padding:8px 0 10px;border-bottom:1px solid var(--border);margin-bottom:14px;
+/* ── CELLS SCROLL AREA ── */
+.cells-scroll{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding:12px 14px calc(var(--bar-h) + env(safe-area-inset-bottom,12px) + 12px);
 }
-.dictation-inner{display:flex;align-items:center;gap:8px;background:var(--surface);
-  border:2px solid var(--border);border-radius:12px;padding:8px 12px;transition:border-color .2s;}
-.dictation-inner:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,.12);}
-.dictation-inner.matched{border-color:var(--green);box-shadow:0 0 0 3px rgba(16,185,129,.12);animation:matchGlow .4s ease;}
-.dictation-inner.no-match{border-color:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.12);}
-@keyframes matchGlow{0%{background:var(--surface)}40%{background:rgba(16,185,129,.1)}100%{background:var(--surface)}}
-.mic-icon{font-size:18px;flex-shrink:0;}
-.dictation-input{flex:1;background:transparent;border:none;outline:none;
-  font-family:var(--sans);font-size:16px;color:var(--text);font-weight:500;min-width:0;caret-color:var(--accent);}
-.dictation-input::placeholder{color:var(--muted);font-size:13px;}
-.dictation-status{font-family:var(--mono);font-size:10px;color:var(--muted);white-space:nowrap;flex-shrink:0;}
-.dictation-status.ok{color:var(--green);}
-.dictation-status.err{color:var(--red);}
-.btn-clear-dict{background:transparent;border:none;color:var(--muted);font-size:18px;
-  cursor:pointer;flex-shrink:0;padding:2px 4px;line-height:1;min-width:var(--tap);display:flex;align-items:center;justify-content:center;}
-.btn-clear-dict:active{color:var(--red);}
 
-/* ── HOW-TO COLLAPSIBLE ── */
-.howto-toggle{
-  display:flex;align-items:center;justify-content:space-between;
-  width:100%;background:transparent;border:none;padding:7px 0 0;
-  color:var(--muted);font-family:var(--mono);font-size:10px;cursor:pointer;
-  text-transform:uppercase;letter-spacing:1px;
-  gap:8px;
+/* ── SECTION LABEL ── */
+.section-lbl{
+  font-size:9px;text-transform:uppercase;letter-spacing:2px;
+  color:var(--muted);font-family:var(--mono);
+  padding:4px 2px 6px;margin-top:10px;
+  border-bottom:1px solid var(--border);margin-bottom:8px;
+  display:flex;align-items:center;gap:6px;
 }
-.howto-toggle:active{color:var(--accent);}
-.howto-arrow{transition:transform .25s;font-size:12px;}
-.howto-arrow.open{transform:rotate(180deg);}
-.howto-body{display:none;margin-top:8px;}
-.howto-body.open{display:block;}
-.how-to{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:6px;}
-.how-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:9px 12px;}
-.how-card-title{font-size:10px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;}
-.how-card-body{font-size:10px;color:var(--muted);line-height:1.7;}
-.how-card-body kbd{background:var(--surface);border:1px solid var(--border);border-radius:4px;
-  padding:1px 5px;font-family:var(--mono);font-size:9px;color:var(--text);}
-.shortcut-grid{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin-top:4px;}
-.sk{display:contents;}
-.sk span{font-size:10px;color:var(--muted);align-self:center;}
+.section-lbl:first-child{margin-top:0;}
+.section-dot{width:6px;height:6px;border-radius:50%;background:var(--section-color,var(--muted));flex-shrink:0;}
 
-/* ── CHIPS ── */
-.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:8px;}
-.chip{background:var(--surface2);border:1px solid var(--border);border-radius:99px;
-  padding:5px 12px;font-size:11px;font-family:var(--mono);color:var(--muted);
-  cursor:pointer;transition:all .15s;user-select:none;touch-action:manipulation;
-  min-height:var(--tap);display:flex;align-items:center;}
-.chip:active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.08);}
-.chip.undo{border-color:var(--red);color:var(--red);}
-.chip.undo:active{background:rgba(239,68,68,.1);}
+/* ── CELL GRID ── */
+.cell-grid{display:grid;gap:8px;margin-bottom:4px;}
+.cell-grid.cols-2{grid-template-columns:1fr 1fr;}
+.cell-grid.cols-3{grid-template-columns:1fr 1fr 1fr;}
 
-/* ── MAIN GRID ── */
-.main-grid{display:grid;grid-template-columns:1fr 300px;gap:16px;}
+/* ── CELL BUTTON ── */
+.cell-btn{
+  --cc:var(--accent);
+  background:var(--surface);border:1px solid var(--border);
+  border-top:3px solid var(--cc);
+  border-radius:var(--radius);
+  display:flex;flex-direction:column;
+  align-items:stretch;
+  cursor:pointer;user-select:none;touch-action:manipulation;
+  position:relative;overflow:hidden;
+  transition:background .1s, border-color .1s;
+  -webkit-user-select:none;
+}
+.cell-btn:active{background:var(--surface2);border-color:var(--cc);}
+.cell-btn.flash{animation:btnFlash .22s ease;}
+@keyframes btnFlash{
+  0%{transform:scale(1)}
+  40%{transform:scale(.95);background:rgba(255,255,255,.06)}
+  100%{transform:scale(1)}
+}
 
-/* ── CELLS GRID ── */
-.cells-panel{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-.section-label{grid-column:1/-1;font-size:9px;text-transform:uppercase;letter-spacing:2px;
-  color:var(--muted);font-family:var(--mono);padding-bottom:4px;border-bottom:1px solid var(--border);margin-top:6px;}
+/* Wide card (cols-2) */
+.cols-2 .cell-btn{min-height:90px;}
+.cols-2 .cell-btn-body{
+  flex:1;display:flex;flex-direction:column;
+  justify-content:space-between;padding:10px 12px 6px;
+}
+.cols-2 .cell-btn-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3;}
+.cols-2 .cell-btn-tag{font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
+.cols-2 .cell-btn-count{
+  font-family:var(--mono);font-size:40px;font-weight:700;
+  color:var(--cc);line-height:1;margin:4px 0 8px;
+}
+.cols-2 .cell-btn-minus{
+  border-top:1px solid var(--border);
+  padding:8px;text-align:center;
+  font-size:18px;color:var(--muted);font-family:var(--mono);
+  background:transparent;border:none;border-top:1px solid var(--border);
+  cursor:pointer;touch-action:manipulation;width:100%;
+  min-height:40px;display:flex;align-items:center;justify-content:center;
+}
+.cols-2 .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 
-/* ── CELL CARD — desktop ── */
-.cell-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;
-  padding:12px;cursor:pointer;transition:all .18s;position:relative;overflow:hidden;user-select:none;}
-.cell-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;
-  background:var(--card-color,var(--accent));opacity:0;transition:opacity .2s;}
-.cell-card:hover,.cell-card:active{border-color:var(--card-color,var(--accent));transform:translateY(-1px);background:var(--surface2);}
-.cell-card:hover::before,.cell-card:active::before{opacity:1;}
-.cell-card.flash{animation:cardFlash .25s ease;}
-@keyframes cardFlash{0%{transform:scale(1)}45%{transform:scale(.96);background:rgba(255,255,255,.06)}100%{transform:scale(1)}}
+/* Narrow card (cols-3) */
+.cols-3 .cell-btn{min-height:100px;}
+.cols-3 .cell-btn-body{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:8px 6px 4px;text-align:center;
+}
+.cols-3 .cell-btn-name{font-size:10px;font-weight:700;color:var(--text);line-height:1.3;}
+.cols-3 .cell-btn-tag{font-size:7px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+.cols-3 .cell-btn-count{
+  font-family:var(--mono);font-size:32px;font-weight:700;
+  color:var(--cc);line-height:1;margin:6px 0 6px;
+}
+.cols-3 .cell-btn-minus{
+  border-top:1px solid var(--border);
+  padding:6px;text-align:center;
+  font-size:18px;color:var(--muted);
+  background:transparent;border:none;border-top:1px solid var(--border);
+  cursor:pointer;touch-action:manipulation;width:100%;
+  min-height:36px;display:flex;align-items:center;justify-content:center;
+}
+.cols-3 .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 
-.card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;margin-bottom:6px;}
-.card-name{font-size:12px;font-weight:600;color:var(--text);line-height:1.3;}
-.card-shortcut{font-family:var(--mono);font-size:9px;background:var(--surface2);
-  border:1px solid var(--border);border-radius:4px;padding:1px 5px;color:var(--muted);flex-shrink:0;}
-.card-count{font-family:var(--mono);font-size:38px;font-weight:700;
-  color:var(--card-color,var(--accent));line-height:1;margin-bottom:4px;}
-.card-tag{display:inline-block;font-size:8px;text-transform:uppercase;letter-spacing:1px;
-  padding:2px 7px;border-radius:99px;background:rgba(255,255,255,.05);color:var(--muted);margin-bottom:5px;}
-.card-desc{font-size:9px;color:var(--muted);line-height:1.5;}
-.card-bar{height:3px;background:var(--surface2);border-radius:99px;margin-top:8px;overflow:hidden;}
-.card-bar-fill{height:100%;background:var(--card-color,var(--accent));border-radius:99px;transition:width .3s;opacity:.6;}
-.btn-row{display:flex;gap:6px;margin-top:8px;}
-.btn-inc,.btn-dec,.btn-rst{flex:1;background:transparent;border:1px solid var(--border);
-  color:var(--muted);border-radius:7px;padding:6px 0;font-size:15px;cursor:pointer;
-  transition:all .15s;font-family:var(--mono);touch-action:manipulation;min-height:var(--tap);}
-.btn-inc:active{background:var(--card-color);color:#000;border-color:var(--card-color);}
-.btn-dec:active{background:var(--surface2);color:var(--text);border-color:var(--muted);}
-.btn-rst:active{background:rgba(239,68,68,.12);color:var(--red);border-color:var(--red);}
+/* ── BOTTOM BAR ── */
+.bottom-bar{
+  position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:var(--surface);border-top:1px solid var(--border);
+  display:flex;align-items:center;gap:8px;
+  padding:10px 14px env(safe-area-inset-bottom,10px);
+  height:calc(var(--bar-h) + env(safe-area-inset-bottom,0px));
+}
+.bar-btn{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;padding:8px 6px;border-radius:10px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);cursor:pointer;touch-action:manipulation;
+  font-family:var(--sans);transition:all .15s;min-height:44px;
+}
+.bar-btn:active{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
+.bar-btn-icon{font-size:18px;line-height:1;}
+.bar-btn-label{font-size:9px;text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);}
+.bar-btn.primary{
+  background:linear-gradient(135deg,rgba(0,212,255,.12),rgba(124,58,237,.12));
+  border-color:var(--accent);color:var(--accent);flex:1.5;
+}
+.bar-btn.primary:active{opacity:.7;}
+.bar-btn.danger:active{border-color:var(--red);color:var(--red);}
 
-/* ── RIGHT PANEL ── */
-.right-panel{display:flex;flex-direction:column;gap:12px;}
-.summary-panel{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;flex:1;}
-.panel-title{font-family:var(--mono);font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px;}
-.summary-row{display:grid;grid-template-columns:1fr auto auto;gap:5px;align-items:center;
-  padding:5px 0;border-bottom:1px solid var(--border);font-size:11px;}
-.summary-row:last-child{border-bottom:none;}
-.s-name{color:var(--muted);font-size:10px;}
-.s-val{font-family:var(--mono);font-weight:700;text-align:right;}
-.s-pct{font-size:9px;color:var(--muted);font-family:var(--mono);text-align:right;min-width:32px;}
-.summary-total{margin-top:8px;padding-top:8px;border-top:2px solid var(--border);
-  display:grid;grid-template-columns:1fr auto auto;gap:5px;font-size:12px;font-weight:700;}
-.actions-panel{display:flex;flex-direction:column;gap:6px;}
-.btn-action{padding:10px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
-  color:var(--text);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;
-  transition:all .18s;display:flex;align-items:center;gap:8px;touch-action:manipulation;
-  width:100%;min-height:var(--tap);}
-.btn-action:active{background:var(--surface2);border-color:var(--accent);color:var(--accent);}
-.btn-action.danger:active{border-color:var(--red);color:var(--red);background:rgba(239,68,68,.08);}
-.btn-action.success-btn{border-color:var(--green);color:var(--green);}
-.btn-action.success-btn:active{background:rgba(16,185,129,.08);}
-#csvFileInput{display:none;}
-
-/* ── NOTIFICATION ── */
-.notification{position:fixed;top:12px;right:12px;background:var(--surface2);
-  border:1px solid var(--accent);color:var(--accent);padding:10px 16px;
-  border-radius:10px;font-family:var(--mono);font-size:12px;z-index:1000;
-  opacity:0;transform:translateY(-8px);transition:all .25s;pointer-events:none;max-width:280px;}
-.notification.show{opacity:1;transform:translateY(0);}
-.notification.error{border-color:var(--red);color:var(--red);}
-.notification.success{border-color:var(--green);color:var(--green);}
-
-/* ── MODAL ── */
-.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.8);backdrop-filter:blur(4px);
-  z-index:500;display:none;align-items:center;justify-content:center;padding:14px;}
+/* ══════════════════════════════════════
+   VOICE MODAL (slides up from bottom)
+══════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.75);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  z-index:500;display:none;align-items:flex-end;justify-content:center;
+}
 .modal-overlay.open{display:flex;}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;
-  padding:20px;max-width:640px;width:100%;max-height:88vh;overflow-y:auto;}
-.modal h2{font-family:var(--mono);font-size:13px;color:var(--accent);margin-bottom:16px;letter-spacing:1px;}
-.modal table{width:100%;border-collapse:collapse;font-size:11px;}
-.modal th{text-align:left;padding:6px 8px;font-family:var(--mono);font-size:9px;
-  text-transform:uppercase;letter-spacing:1px;color:var(--muted);border-bottom:1px solid var(--border);}
-.modal td{padding:7px 8px;border-bottom:1px solid var(--border);color:var(--text);}
-.modal td:nth-child(3),.modal td:nth-child(4),.modal td:nth-child(5){font-family:var(--mono);font-weight:700;}
-.modal-footer{margin-top:12px;background:var(--surface2);border-radius:8px;padding:10px;
-  font-size:10px;color:var(--muted);font-family:var(--mono);line-height:1.8;}
-.modal-close{margin-top:14px;padding:10px 22px;background:var(--surface2);border:1px solid var(--border);
-  color:var(--text);border-radius:8px;cursor:pointer;font-family:var(--sans);font-size:13px;
-  min-height:var(--tap);width:100%;}
-.modal-close:active{border-color:var(--accent);color:var(--accent);}
+.modal-sheet{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px 20px 0 0;width:100%;max-width:600px;
+  padding:20px 20px calc(20px + env(safe-area-inset-bottom,0px));
+  animation:slideUp .25s ease;
+}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-pill{width:36px;height:4px;background:var(--border);border-radius:99px;margin:0 auto 16px;}
+.modal-title{font-family:var(--mono);font-size:11px;color:var(--accent);
+  text-transform:uppercase;letter-spacing:2px;margin-bottom:14px;}
 
-::-webkit-scrollbar{width:4px;}
-::-webkit-scrollbar-track{background:var(--bg);}
+/* voice input */
+.voice-input-wrap{
+  display:flex;align-items:center;gap:8px;
+  background:var(--surface2);border:2px solid var(--border);
+  border-radius:12px;padding:10px 14px;margin-bottom:12px;
+  transition:border-color .2s;
+}
+.voice-input-wrap:focus-within{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,212,255,.1);}
+.voice-input-wrap.matched{border-color:var(--green);}
+.voice-input-wrap.no-match{border-color:var(--red);}
+.voice-input{
+  flex:1;background:transparent;border:none;outline:none;
+  color:var(--text);font-size:18px;font-family:var(--sans);
+  caret-color:var(--accent);
+}
+.voice-input::placeholder{color:var(--muted);font-size:14px;}
+.voice-status{font-family:var(--mono);font-size:11px;color:var(--muted);white-space:nowrap;}
+.voice-status.ok{color:var(--green);}
+.voice-status.err{color:var(--red);}
+.voice-clear{background:transparent;border:none;color:var(--muted);
+  font-size:20px;cursor:pointer;padding:2px 4px;line-height:1;}
+.voice-clear:active{color:var(--red);}
+
+.voice-hint{font-size:11px;color:var(--muted);line-height:1.7;margin-bottom:14px;}
+.voice-hint strong{color:var(--text);}
+
+/* chips */
+.voice-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px;}
+.vchip{
+  background:var(--surface2);border:1px solid var(--border);border-radius:99px;
+  padding:7px 14px;font-size:12px;font-family:var(--mono);color:var(--muted);
+  cursor:pointer;touch-action:manipulation;transition:all .15s;
+}
+.vchip:active{border-color:var(--accent);color:var(--accent);background:rgba(0,212,255,.08);}
+
+.voice-close{
+  width:100%;padding:14px;border-radius:12px;
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);font-family:var(--sans);font-size:15px;cursor:pointer;
+}
+.voice-close:active{border-color:var(--muted);}
+
+/* ══════════════════════════════════════
+   REPORT MODAL
+══════════════════════════════════════ */
+.report-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.85);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  z-index:500;display:none;flex-direction:column;
+  padding:env(safe-area-inset-top,0) 0 0;
+}
+.report-overlay.open{display:flex;}
+.report-inner{
+  flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;
+  background:var(--surface);padding:20px 16px;
+}
+.report-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
+.report-title{font-family:var(--mono);font-size:13px;color:var(--accent);letter-spacing:1px;}
+.report-close-btn{
+  background:var(--surface2);border:1px solid var(--border);
+  color:var(--text);border-radius:8px;padding:8px 16px;
+  font-family:var(--sans);font-size:13px;cursor:pointer;
+}
+.report-close-btn:active{border-color:var(--accent);color:var(--accent);}
+
+/* stats row */
+.report-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.r-stat{background:var(--surface2);border:1px solid var(--border);
+  border-radius:10px;padding:10px 12px;}
+.r-stat-val{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--accent);}
+.r-stat-lbl{font-size:10px;color:var(--muted);margin-top:2px;}
+
+/* report table */
+.report-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
+.report-table th{text-align:left;padding:7px 8px;font-family:var(--mono);font-size:9px;
+  text-transform:uppercase;letter-spacing:1px;color:var(--muted);
+  border-bottom:1px solid var(--border);}
+.report-table td{padding:8px 8px;border-bottom:1px solid var(--border);color:var(--text);}
+.report-table td:nth-child(3),.report-table td:nth-child(4),.report-table td:nth-child(5){
+  font-family:var(--mono);font-weight:700;font-size:13px;}
+.report-table tr:last-child td{border-bottom:none;}
+.cat-badge{
+  display:inline-block;font-size:8px;padding:2px 6px;border-radius:99px;
+  text-transform:uppercase;letter-spacing:.5px;font-family:var(--mono);
+}
+.cat-normal{background:rgba(16,185,129,.1);color:#10b981;}
+.cat-geno{background:rgba(245,158,11,.1);color:#f59e0b;}
+.cat-cyto{background:rgba(239,68,68,.1);color:#ef4444;}
+
+.report-footer{
+  background:var(--surface2);border:1px solid var(--border);border-radius:10px;
+  padding:12px;font-size:10px;color:var(--muted);font-family:var(--mono);line-height:1.9;
+  margin-bottom:16px;
+}
+.report-export-btn{
+  width:100%;padding:16px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--green),#059669);
+  color:#fff;font-size:16px;font-weight:700;cursor:pointer;
+  font-family:var(--sans);margin-bottom:10px;
+}
+.report-export-btn:active{opacity:.8;}
+
+/* ══════════════════════════════════════
+   COMPLETION MODAL
+══════════════════════════════════════ */
+#doneModal.modal-overlay{align-items:center;justify-content:center;padding:20px;}
+.done-card{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:28px 24px;width:100%;max-width:400px;
+  text-align:center;
+}
+.done-emoji{font-size:52px;margin-bottom:12px;}
+.done-title{font-family:var(--mono);font-size:16px;color:var(--accent);
+  letter-spacing:1px;margin-bottom:6px;}
+.done-sub{font-size:13px;color:var(--muted);margin-bottom:20px;line-height:1.6;}
+.done-actions{display:flex;flex-direction:column;gap:10px;}
+.done-export{
+  padding:16px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--green),#059669);
+  color:#fff;font-size:16px;font-weight:700;cursor:pointer;font-family:var(--sans);
+}
+.done-export:active{opacity:.8;}
+.done-report{
+  padding:14px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--text);font-size:14px;cursor:pointer;font-family:var(--sans);
+}
+.done-report:active{border-color:var(--accent);color:var(--accent);}
+.done-continue{
+  padding:12px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-size:13px;cursor:pointer;font-family:var(--sans);
+}
+.done-continue:active{color:var(--text);}
+
+/* ── TOAST ── */
+.toast{
+  position:fixed;top:max(16px, env(safe-area-inset-top));
+  left:50%;transform:translateX(-50%) translateY(-8px);
+  background:var(--surface2);border:1px solid var(--accent);
+  color:var(--accent);padding:10px 18px;border-radius:10px;
+  font-family:var(--mono);font-size:12px;z-index:1000;
+  opacity:0;transition:all .25s;pointer-events:none;
+  white-space:nowrap;max-width:90vw;text-align:center;
+}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.error{border-color:var(--red);color:var(--red);}
+.toast.success{border-color:var(--green);color:var(--green);}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
-
-/* ════════════════════════════════════════════
-   TABLET  ≤ 900px
-════════════════════════════════════════════ */
-@media(max-width:900px){
-  .main-grid{grid-template-columns:1fr;}
-  .right-panel{flex-direction:row;flex-wrap:wrap;}
-  .summary-panel{flex:1;min-width:240px;}
-  .actions-panel{flex-direction:row;flex-wrap:wrap;flex:1;min-width:180px;}
-  .btn-action{flex:1;min-width:130px;}
-}
-
-/* ════════════════════════════════════════════
-   MOBILE  ≤ 600px  — complete redesign
-════════════════════════════════════════════ */
-@media(max-width:600px){
-
-  /* Header compact */
-  header{gap:8px;padding-bottom:12px;}
-  .logo-text p{display:none;}
-  .hstat-val{font-size:20px;}
-
-  /* Progress stays */
-
-  /* Dictation bar minimal */
-  .dictation-bar{padding:6px 0 8px;}
-
-  /* How-to toggle visible, cards grid 1-col */
-  .how-to{grid-template-columns:1fr;}
-
-  /* ── CELLS: 1 column, big cards ── */
-  .cells-panel{grid-template-columns:1fr;gap:8px;}
-
-  /* Mobile card: horizontal layout */
-  .cell-card{
-    padding:0;
-    display:grid;
-    /* [color bar] [name+tag] [big count] [+/-/reset] */
-    grid-template-columns:5px 1fr auto auto;
-    grid-template-rows:auto;
-    align-items:stretch;
-    border-radius:12px;
-    overflow:hidden;
-    min-height:64px;
-  }
-  .cell-card::before{
-    /* Reuse as left color bar */
-    position:relative;
-    top:auto;left:auto;right:auto;
-    width:5px;height:auto;
-    opacity:1;
-    border-radius:0;
-    grid-column:1;
-    grid-row:1/3;
-  }
-
-  /* Name + tag block */
-  .card-top{
-    grid-column:2;
-    grid-row:1;
-    padding:10px 10px 0 10px;
-    margin-bottom:0;
-    flex-direction:column;
-    align-items:flex-start;
-    gap:2px;
-  }
-  .card-name{font-size:13px;font-weight:700;}
-  .card-shortcut{display:none;} /* hide on mobile to save space */
-
-  /* Description hidden on mobile */
-  .card-desc{display:none;}
-
-  /* Tag on its own row under name */
-  .card-tag{
-    grid-column:2;
-    grid-row:2;
-    margin:0 0 8px 10px;
-    padding:1px 6px;
-    font-size:8px;
-    display:inline-block;
-    width:fit-content;
-  }
-
-  /* Big count */
-  .card-count{
-    grid-column:3;
-    grid-row:1/3;
-    font-size:42px;
-    padding:0 12px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    border-left:1px solid var(--border);
-    min-width:80px;
-    line-height:1;
-  }
-
-  /* +/- buttons as tall vertical column */
-  .btn-row{
-    grid-column:4;
-    grid-row:1/3;
-    flex-direction:column;
-    margin:0;
-    gap:0;
-    border-left:1px solid var(--border);
-    width:48px;
-  }
-  .btn-inc,.btn-dec,.btn-rst{
-    flex:1;
-    border:none;
-    border-radius:0;
-    min-height:0;
-    font-size:18px;
-    border-bottom:1px solid var(--border);
-    padding:0;
-  }
-  .btn-rst{border-bottom:none;font-size:13px;}
-  .btn-inc{border-top:none;}
-
-  /* Progress bar hidden inside cards on mobile */
-  .card-bar{display:none;}
-
-  /* Section label full width */
-  .section-label{font-size:9px;padding:4px 0 3px;}
-
-  /* Right panel stacked on mobile */
-  .right-panel{flex-direction:column;}
-  .summary-panel{min-width:unset;}
-  .actions-panel{flex-direction:column;}
-  .btn-action{min-width:unset;flex:none;}
-}
 </style>
 </head>
 <body>
-<div class="app">
 
-  <header>
-    <div class="logo">
-      <div class="logo-icon">🔬</div>
-      <div class="logo-text">
+<!-- ══════════════════════
+     SCREEN 1 · SETUP
+══════════════════════ -->
+<div id="scSetup" class="screen active">
+  <div id="setupScroll" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:24px 20px;">
+  <div class="setup-card">
+    <div class="setup-logo">
+      <div class="setup-logo-icon">🔬</div>
+      <div class="setup-logo-text">
         <h1>BMCyt Counter</h1>
         <p>HUMNxl · Bolognesi 2013</p>
       </div>
-    </div>
-    <div class="header-right">
       <div class="lang-toggle">
         <button class="lang-btn active" id="btnES" onclick="setLang('es')">ES</button>
-        <button class="lang-btn"         id="btnEN" onclick="setLang('en')">EN</button>
-      </div>
-      <div class="header-stats">
-        <div class="hstat"><div class="hstat-val" id="totalCount">0</div><div class="hstat-label" id="lbl-totalH">Total</div></div>
-        <div class="hstat"><div class="hstat-val" id="pctCount">0%</div><div class="hstat-label" id="lbl-avance">Avance</div></div>
-        <div class="hstat"><div class="hstat-val" id="remainCount">2000</div><div class="hstat-label" id="lbl-rest">Restantes</div></div>
+        <button class="lang-btn"        id="btnEN" onclick="setLang('en')">EN</button>
       </div>
     </div>
-  </header>
 
-  <!-- PROGRESS -->
-  <div class="progress-section">
-    <div class="progress-labels"><span id="lbl-prog">PROGRESO</span><span id="progressLabel">0 / 2000</span></div>
-    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
-    <div class="milestones">
-      <div class="ms" id="ms500">500</div>
-      <div class="ms" id="ms1000">1000 ★</div>
-      <div class="ms" id="ms1500">1500</div>
-      <div class="ms" id="ms2000">2000 ✓</div>
+    <!-- resume banner (shown if saved session exists) -->
+    <div id="resumeBanner" class="resume-banner" style="display:none">
+      <strong id="resumeTitle">↩ Sesión guardada encontrada</strong>
+      <span id="resumeInfo"></span>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="inpParticipant" id="lbl-pid">ID del Participante <span>*</span></label>
+      <input type="text" id="inpParticipant" class="form-input"
+        placeholder="P001" autocomplete="off" autocorrect="off"
+        autocapitalize="characters" spellcheck="false">
+    </div>
+    <div class="form-group">
+      <label class="form-label" for="inpSample" id="lbl-sample">N° de Muestra</label>
+      <input type="text" id="inpSample" class="form-input"
+        placeholder="1" autocomplete="off" autocorrect="off" spellcheck="false">
+    </div>
+
+    <div class="setup-actions" id="setupActions">
+      <!-- dynamic buttons rendered by JS -->
     </div>
   </div>
-
-  <!-- DICTATION BAR — sticky, minimal -->
-  <div class="dictation-bar">
-    <div class="dictation-inner" id="dictInner">
-      <span class="mic-icon" id="dictLangIcon">🎙️ ES</span>
-      <input type="text" id="dictInput" class="dictation-input"
-        placeholder="Dictado de voz — escribe o habla el tipo de célula"
-        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <span class="dictation-status" id="dictStatus">—</span>
-      <button class="btn-clear-dict" id="btnClearDict" onclick="manualClear()">×</button>
-    </div>
-
-    <!-- COLLAPSIBLE HOW-TO -->
-    <button class="howto-toggle" id="howtoToggleBtn" onclick="toggleHowto()">
-      <span id="howtoToggleLabel">❓ Cómo activar el dictado / atajos</span>
-      <span class="howto-arrow" id="howtoArrow">▾</span>
-    </button>
-    <div class="howto-body" id="howtoBody">
-      <div class="how-to" id="howToGrid"></div>
-    </div>
-
-    <!-- Quick chips -->
-    <div class="chips" id="chipsRow"></div>
-  </div>
-
-  <!-- MAIN CONTENT -->
-  <div class="main-grid">
-    <div class="cells-panel" id="cellsGrid"></div>
-
-    <div class="right-panel">
-      <div class="summary-panel">
-        <div class="panel-title" id="summaryTitle">Resumen de Conteo</div>
-        <div id="summaryRows"></div>
-        <div class="summary-total">
-          <span style="color:var(--text)" id="labelTotal">TOTAL</span>
-          <span style="color:var(--accent);font-family:var(--mono)" id="summaryTotal">0</span>
-          <span style="color:var(--accent);font-family:var(--mono);font-size:10px" id="summaryPct">0%</span>
-        </div>
-      </div>
-      <div class="actions-panel">
-        <button class="btn-action"             onclick="showReport()">📊 <span id="lbl-report">Reporte completo</span></button>
-        <button class="btn-action success-btn" onclick="exportCSV()">⬇️ <span id="lbl-export">Guardar sesión (CSV)</span></button>
-        <button class="btn-action"             onclick="document.getElementById('csvFileInput').click()">📂 <span id="lbl-import">Cargar sesión (CSV)</span></button>
-        <input type="file" id="csvFileInput" accept=".csv" onchange="importCSV(event)">
-        <button class="btn-action"             onclick="undoLast()">↩️ <span id="lbl-undo">Deshacer último</span></button>
-        <button class="btn-action danger"      onclick="confirmReset()">🗑️ <span id="lbl-reset">Reiniciar todo</span></button>
-      </div>
-    </div>
   </div>
 </div>
 
-<div class="notification" id="notification"></div>
+<!-- ══════════════════════
+     SCREEN 2 · COUNTER
+══════════════════════ -->
+<div id="scCounter" class="screen">
 
-<div class="modal-overlay" id="reportModal">
-  <div class="modal">
-    <h2 id="reportTitle">📊 REPORTE BMCyt</h2>
-    <table>
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <div class="top-bar-inner">
+      <div class="top-row">
+        <div class="top-logo">
+          <div class="top-logo-icon">🔬</div>
+          <span class="top-logo-label">BMCYT</span>
+        </div>
+        <button class="top-participant" id="topParticipant" onclick="openEditParticipant()">—</button>
+        <div class="top-stats">
+          <div class="top-stat">
+            <div class="top-stat-val" id="topTotal">0</div>
+            <div class="top-stat-lbl" id="lbl-topTotal">Total</div>
+          </div>
+          <div class="top-stat">
+            <div class="top-stat-val" id="topRemain">2000</div>
+            <div class="top-stat-lbl" id="lbl-topRemain">Faltan</div>
+          </div>
+        </div>
+      </div>
+      <div class="progress-wrap">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <div class="milestones">
+          <div class="ms" id="ms500">500</div>
+          <div class="ms" id="ms1000">1000 ★</div>
+          <div class="ms" id="ms1500">1500</div>
+          <div class="ms" id="ms2000">2000 ✓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CELLS SCROLL -->
+  <div class="cells-scroll" id="cellsScroll"></div>
+
+  <!-- BOTTOM BAR -->
+  <div class="bottom-bar">
+    <button class="bar-btn" onclick="undoLast()">
+      <span class="bar-btn-icon">↩</span>
+      <span class="bar-btn-label" id="lbl-undo">Deshacer</span>
+    </button>
+    <button class="bar-btn primary" onclick="openVoice()">
+      <span class="bar-btn-icon">🎙️</span>
+      <span class="bar-btn-label" id="lbl-voice">Voz</span>
+    </button>
+    <button class="bar-btn" onclick="openReport()">
+      <span class="bar-btn-icon">📊</span>
+      <span class="bar-btn-label" id="lbl-report">Reporte</span>
+    </button>
+    <button class="bar-btn danger" onclick="confirmReset()">
+      <span class="bar-btn-icon">🗑️</span>
+      <span class="bar-btn-label" id="lbl-reset">Reset</span>
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     VOICE MODAL
+══════════════════════ -->
+<div class="modal-overlay" id="voiceModal">
+  <div class="modal-sheet">
+    <div class="modal-pill"></div>
+    <div class="modal-title" id="voiceTitle">🎙️ Dictado de Voz</div>
+    <div class="voice-input-wrap" id="voiceWrap">
+      <input type="text" id="voiceInput" class="voice-input"
+        placeholder="Escribe o activa el micrófono del teclado"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+      <span class="voice-status" id="voiceStatus">—</span>
+      <button class="voice-clear" onclick="clearVoice()">×</button>
+    </div>
+    <p class="voice-hint" id="voiceHint"></p>
+    <div class="voice-chips" id="voiceChips"></div>
+    <button class="voice-close" onclick="closeVoice()" id="lbl-voiceClose">Cerrar</button>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     REPORT MODAL
+══════════════════════ -->
+<div class="report-overlay" id="reportModal">
+  <div class="report-inner">
+    <div class="report-header">
+      <div class="report-title" id="reportTitle">📊 REPORTE BMCyt</div>
+      <button class="report-close-btn" onclick="closeReport()" id="lbl-reportClose">Cerrar</button>
+    </div>
+    <div class="report-stats" id="reportStats"></div>
+    <table class="report-table">
       <thead><tr>
-        <th id="th-cat">Categoría</th><th id="th-type">Tipo celular</th>
-        <th id="th-count">Conteo</th><th>%</th><th id="th-per">/ 1000</th>
+        <th id="th-cat">Categoría</th>
+        <th id="th-type">Tipo</th>
+        <th id="th-count">N</th>
+        <th>%</th>
+        <th id="th-per">/1000</th>
       </tr></thead>
       <tbody id="reportBody"></tbody>
     </table>
-    <div class="modal-footer" id="reportFooter"></div>
-    <button class="modal-close" id="btnClose" onclick="closeModal()">Cerrar</button>
+    <div class="report-footer" id="reportFooter"></div>
+    <button class="report-export-btn" onclick="exportCSV()">⬇️ <span id="lbl-exportBtn">Guardar CSV</span></button>
   </div>
 </div>
 
+<!-- ══════════════════════
+     DONE MODAL
+══════════════════════ -->
+<div class="modal-overlay" id="doneModal">
+  <div class="done-card">
+    <div class="done-emoji">🎉</div>
+    <div class="done-title" id="doneTitle">¡META ALCANZADA!</div>
+    <div class="done-sub" id="doneSub">Has contado 2000 células.<br>Guarda tu sesión para registrar los resultados.</div>
+    <div class="done-actions">
+      <button class="done-export" onclick="exportCSV();closeDone()">⬇️ <span id="lbl-doneExport">Guardar CSV</span></button>
+      <button class="done-report" onclick="closeDone();openReport()">📊 <span id="lbl-doneReport">Ver reporte completo</span></button>
+      <button class="done-continue" onclick="closeDone()" id="lbl-doneContinue">Seguir contando</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
 <script>
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // DATA
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 const GOAL = 2000;
 
 const CELL_DEFS = [
-  {key:'diferenciada', labelEs:'Célula Diferenciada', labelEn:'Differentiated Cell',
-   catEs:'Normal',catEn:'Normal',color:'#10b981',
-   voiceEs:'"normal" · "dife"',voiceEn:'"normal" · "diff"',
-   tagEs:'Normal',tagEn:'Normal',
-   descEs:'Núcleo oval uniforme. Citoplasma angular, plano. Estrato córneo.',
-   descEn:'Uniform oval nucleus. Angular flat cytoplasm. Stratum corneum.'},
+  // Normal
+  {key:'diferenciada',
+   labelEs:'Diferenciada', labelEn:'Differentiated',
+   shortEs:'Diferenciada', shortEn:'Differentiated',
+   catEs:'Normal', catEn:'Normal', catClass:'cat-normal',
+   color:'#10b981',
+   voiceEs:'"normal" · "dife"', voiceEn:'"normal" · "diff"',
+   tagEs:'Normal', tagEn:'Normal',
+   descEs:'Núcleo oval uniforme. Citoplasma plano.',
+   descEn:'Uniform oval nucleus. Flat cytoplasm.'},
 
-  {key:'basal', labelEs:'Célula Basal', labelEn:'Basal Cell',
-   catEs:'Normal',catEn:'Normal',color:'#06b6d4',
-   voiceEs:'"basal"',voiceEn:'"basal"',
-   tagEs:'Proliferación',tagEn:'Proliferation',
-   descEs:'Mayor relación núcleo:citoplasma. Citoplasma oscuro. Estrato basal.',
-   descEn:'Large nucleus:cytoplasm ratio. Darker cytoplasm. Basal layer.'},
+  {key:'basal',
+   labelEs:'Basal', labelEn:'Basal',
+   shortEs:'Basal', shortEn:'Basal',
+   catEs:'Normal', catEn:'Normal', catClass:'cat-normal',
+   color:'#06b6d4',
+   voiceEs:'"basal"', voiceEn:'"basal"',
+   tagEs:'Proliferación', tagEn:'Proliferation',
+   descEs:'Mayor relación N:C. Citoplasma oscuro.',
+   descEn:'Large N:C ratio. Darker cytoplasm.'},
 
-  {key:'micronucleo', labelEs:'Micronúcleo (MN)', labelEn:'Micronucleus (MN)',
-   catEs:'Genotóxica',catEn:'Genotoxic',color:'#f59e0b',
-   voiceEs:'"micro" · "mn"',voiceEn:'"micro" · "mn"',
-   tagEs:'Genotóxica',tagEn:'Genotoxic',
-   descEs:'MN redondo/oval 1/16–1/3 del núcleo. Feulgen+. Sin contacto.',
-   descEn:'Round/oval MN 1/16–1/3 nucleus. Feulgen+. No contact.'},
+  // Genotoxic
+  {key:'micronucleo',
+   labelEs:'Micronúcleo', labelEn:'Micronucleus',
+   shortEs:'MN', shortEn:'MN',
+   catEs:'Genotóxica', catEn:'Genotoxic', catClass:'cat-geno',
+   color:'#f59e0b',
+   voiceEs:'"micro" · "mn"', voiceEn:'"micro" · "mn"',
+   tagEs:'Genotóxica', tagEn:'Genotoxic',
+   descEs:'Redondo/oval 1/16–1/3 núcleo. Feulgen+.',
+   descEn:'Round/oval 1/16–1/3 nucleus. Feulgen+.'},
 
-  {key:'nbud', labelEs:'Gema Nuclear (NBUD)', labelEn:'Nuclear Bud (NBUD)',
-   catEs:'Genotóxica',catEn:'Genotoxic',color:'#a78bfa',
-   voiceEs:'"gema" · "brote"',voiceEn:'"bud" · "nbud"',
-   tagEs:'Genotóxica',tagEn:'Genotoxic',
-   descEs:'Constrición aguda con puente nucleoplasmático. Incluye broken egg.',
-   descEn:'Sharp constriction with nucleoplasmic bridge. Includes broken egg.'},
+  {key:'nbud',
+   labelEs:'Gema (NBUD)', labelEn:'Nuc. Bud (NBUD)',
+   shortEs:'NBUD', shortEn:'NBUD',
+   catEs:'Genotóxica', catEn:'Genotoxic', catClass:'cat-geno',
+   color:'#a78bfa',
+   voiceEs:'"gema" · "brote"', voiceEn:'"bud" · "nbud"',
+   tagEs:'Genotóxica', tagEn:'Genotoxic',
+   descEs:'Constrición con puente nucleoplasmático.',
+   descEn:'Constriction with nucleoplasmic bridge.'},
 
-  {key:'binucleada', labelEs:'Célula Binucleada', labelEn:'Binucleated Cell',
-   catEs:'Genotóxica',catEn:'Genotoxic',color:'#ec4899',
-   voiceEs:'"bi" · "binucleada"',voiceEn:'"bi" · "binucleated"',
-   tagEs:'Genotóxica',tagEn:'Genotoxic',
+  {key:'binucleada',
+   labelEs:'Binucleada', labelEn:'Binucleated',
+   shortEs:'Binuc.', shortEn:'Binuc.',
+   catEs:'Genotóxica', catEn:'Genotoxic', catClass:'cat-geno',
+   color:'#ec4899',
+   voiceEs:'"bi" · "binucleada"', voiceEn:'"bi" · "binucleated"',
+   tagEs:'Genotóxica', tagEn:'Genotoxic',
    descEs:'Dos núcleos iguales. Defecto de citocinesis.',
    descEn:'Two equal nuclei. Cytokinesis defect.'},
 
-  {key:'cromatina', labelEs:'Cromatina Condensada', labelEn:'Condensed Chromatin',
-   catEs:'Citotóxica',catEn:'Cytotoxic',color:'#f97316',
-   voiceEs:'"croma" · "cond"',voiceEn:'"chroma" · "cond"',
-   tagEs:'Citotóxica',tagEn:'Cytotoxic',
-   descEs:'Patrón estriado paralelo. No puntuar MN.',
-   descEn:'Striated parallel pattern. Do not score MN.'},
+  // Cytotoxic
+  {key:'cromatina',
+   labelEs:'Crom. Condensada', labelEn:'Cond. Chromatin',
+   shortEs:'CC', shortEn:'CC',
+   catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
+   color:'#f97316',
+   voiceEs:'"croma" · "cond"', voiceEn:'"chroma" · "cond"',
+   tagEs:'Citotóxica', tagEn:'Cytotoxic',
+   descEs:'Patrón estriado paralelo.', descEn:'Parallel striated pattern.'},
 
-  {key:'cariorrexis', labelEs:'Cariorrexis', labelEn:'Karyorrhexis',
-   catEs:'Citotóxica',catEn:'Cytotoxic',color:'#ef4444',
-   voiceEs:'"cario" · "rexis"',voiceEn:'"karyo" · "rexis"',
-   tagEs:'Citotóxica',tagEn:'Cytotoxic',
-   descEs:'Patrón moteado denso. Fragmentación nuclear. No puntuar MN.',
-   descEn:'Dense speckled pattern. Nuclear fragmentation. No MN.'},
+  {key:'cariorrexis',
+   labelEs:'Cariorrexis', labelEn:'Karyorrhexis',
+   shortEs:'KR', shortEn:'KR',
+   catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
+   color:'#ef4444',
+   voiceEs:'"cario" · "rexis"', voiceEn:'"karyo" · "rexis"',
+   tagEs:'Citotóxica', tagEn:'Cytotoxic',
+   descEs:'Patrón moteado denso. Fragmentación.', descEn:'Dense speckled pattern. Fragmentation.'},
 
-  {key:'picnosis', labelEs:'Picnosis', labelEn:'Pyknosis',
-   catEs:'Citotóxica',catEn:'Cytotoxic',color:'#fb923c',
-   voiceEs:'"picno" · "picnosis"',voiceEn:'"pyk" · "pyknosis"',
-   tagEs:'Citotóxica',tagEn:'Cytotoxic',
-   descEs:'Núcleo pequeño contraído (1/3–2/3 del normal). Intensamente teñido.',
-   descEn:'Small shrunken nucleus (1/3–2/3 normal). Intensely stained.'},
+  {key:'picnosis',
+   labelEs:'Picnosis', labelEn:'Pyknosis',
+   shortEs:'PN', shortEn:'PN',
+   catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
+   color:'#fb923c',
+   voiceEs:'"picno"', voiceEn:'"pyk" · "pyknosis"',
+   tagEs:'Citotóxica', tagEn:'Cytotoxic',
+   descEs:'Núcleo contraído 1/3–2/3. Intensamente teñido.',
+   descEn:'Shrunken 1/3–2/3 normal. Intensely stained.'},
 
-  {key:'cariolisis', labelEs:'Cariolisis', labelEn:'Karyolysis',
-   catEs:'Citotóxica',catEn:'Cytotoxic',color:'#64748b',
-   voiceEs:'"lisis" · "cariolisis"',voiceEn:'"lysis" · "karyolysis"',
-   tagEs:'Citotóxica',tagEn:'Cytotoxic',
-   descEs:'Sin ADN detectable. Imagen fantasma del núcleo.',
-   descEn:'No detectable DNA. Ghost-like nucleus.'},
+  {key:'cariolisis',
+   labelEs:'Cariolisis', labelEn:'Karyolysis',
+   shortEs:'KL', shortEn:'KL',
+   catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
+   color:'#64748b',
+   voiceEs:'"lisis" · "cariolisis"', voiceEn:'"lysis" · "karyolysis"',
+   tagEs:'Citotóxica', tagEn:'Cytotoxic',
+   descEs:'Sin ADN detectable. Imagen fantasma.', descEn:'No detectable DNA. Ghost-like.'},
 ];
 
-const SECTION_KEYS=[
-  ['diferenciada','basal'],
-  ['micronucleo','nbud','binucleada'],
-  ['cromatina','cariorrexis','picnosis','cariolisis'],
+// sections: [label-key, cols, [cell-keys]]
+const SECTIONS = [
+  {lbl:{es:'Células Normales',en:'Normal Cells'}, cols:2, color:'#10b981',
+   keys:['diferenciada','basal']},
+  {lbl:{es:'Daño Genómico',en:'Genomic Damage'}, cols:3, color:'#f59e0b',
+   keys:['micronucleo','nbud','binucleada']},
+  {lbl:{es:'Muerte Celular',en:'Cell Death'}, cols:2, color:'#ef4444',
+   keys:['cromatina','cariorrexis','picnosis','cariolisis']},
 ];
-
-const KEY_MAP={n:'diferenciada',b:'basal',m:'micronucleo',g:'nbud',
-               i:'binucleada',c:'cromatina',r:'cariorrexis',p:'picnosis',l:'cariolisis'};
 
 const CMD_ES=[
-  {w:['normal','dife','diferenciada','diferenciado','dif','diferente'],   k:'diferenciada'},
-  {w:['basal','bazal'],                                                   k:'basal'},
-  {w:['micro','mn','micronucleo','micronucleos','micronuclei','micronucleado'], k:'micronucleo'},
-  {w:['gema','brote','nbud','bud','gemas','yema'],                        k:'nbud'},
-  {w:['bi','binucleada','binucleado','binuclear'],                        k:'binucleada'},
-  {w:['croma','cond','condensada','cromatina','cro'],                     k:'cromatina'},
-  {w:['cario','rexis','cariorrexis','kariorrexis','cariorexis','carior'], k:'cariorrexis'},
-  {w:['picno','picnosis','piknosis','picnotica','picnotico','picnótica',
-      'picnótico','pik','pic','pyknosis','pyk','piknótico','piknótica',
-      'picnosia','pick'],                                                  k:'picnosis'},
-  {w:['lisis','cariolisis','cariolísis','cariólisis'],                    k:'cariolisis'},
+  {w:['normal','dife','diferenciada','diferenciado','dif'],          k:'diferenciada'},
+  {w:['basal','bazal'],                                               k:'basal'},
+  {w:['micro','mn','micronucleo','micronucleos','micronuclei'],       k:'micronucleo'},
+  {w:['gema','brote','nbud','bud','yema'],                            k:'nbud'},
+  {w:['bi','binucleada','binucleado','binuclear'],                    k:'binucleada'},
+  {w:['croma','cond','condensada','cromatina','cc'],                  k:'cromatina'},
+  {w:['cario','rexis','cariorrexis','kariorrexis','kr'],              k:'cariorrexis'},
+  {w:['picno','picnosis','piknosis','pn','pic','pick'],               k:'picnosis'},
+  {w:['lisis','cariolisis','kl'],                                     k:'cariolisis'},
 ];
 const CMD_EN=[
-  {w:['normal','differentiated','diff','different'],  k:'diferenciada'},
-  {w:['basal'],                                       k:'basal'},
-  {w:['micro','mn','micronucleus','micronucleated','micronuclei'], k:'micronucleo'},
-  {w:['bud','nbud','broken'],                         k:'nbud'},
-  {w:['bi','binucleated','binucleate','binuclear'],   k:'binucleada'},
-  {w:['chroma','chromatin','condensed','cond'],       k:'cromatina'},
-  {w:['karyo','karyorrhexis','karyorrhectic','rexis'],k:'cariorrexis'},
-  {w:['pyk','pyknosis','pyknotic','pick','pik','pic'],k:'picnosis'},
-  {w:['lysis','karyolysis','karyolytic'],             k:'cariolisis'},
+  {w:['normal','differentiated','diff'],                              k:'diferenciada'},
+  {w:['basal'],                                                       k:'basal'},
+  {w:['micro','mn','micronucleus','micronuclei'],                     k:'micronucleo'},
+  {w:['bud','nbud','broken'],                                         k:'nbud'},
+  {w:['bi','binucleated','binucleate'],                               k:'binucleada'},
+  {w:['chroma','chromatin','condensed','cond','cc'],                  k:'cromatina'},
+  {w:['karyo','karyorrhexis','karyorrhectic','kr'],                   k:'cariorrexis'},
+  {w:['pyk','pyknosis','pyknotic','pn'],                              k:'picnosis'},
+  {w:['lysis','karyolysis','kl'],                                     k:'cariolisis'},
 ];
 
-// ═══════════════════════════════
-// UI STRINGS
-// ═══════════════════════════════
-const UI={
+const UI = {
   es:{
-    sections:['Células Normales','Daño Genómico (Genotoxicidad)','Muerte Celular (Citotoxicidad)'],
-    summaryTitle:'Resumen', total:'TOTAL',
-    totalH:'Total', avance:'Avance', rest:'Restantes', prog:'PROGRESO',
-    report:'Reporte completo', export:'Guardar sesión (CSV)', import:'Cargar sesión (CSV)',
-    undo:'Deshacer último', reset:'Reiniciar todo', close:'Cerrar',
-    placeholder:'Dictado de voz — escribe o habla el tipo de célula',
-    reportTitle:'📊 REPORTE BMCyt',
-    thCat:'Categoría', thType:'Tipo celular', thCount:'Conteo', thPer:'/ 1000',
+    pid:'ID del Participante', sample:'N° de Muestra',
+    startNew:'Comenzar nuevo conteo', resumeSession:'Continuar sesión guardada',
+    newSession:'Nueva sesión',
+    resumeTitle:'↩ Sesión guardada encontrada',
+    topRemain:'Faltan',
+    undoBtn:'Deshacer', voiceBtn:'Voz', reportBtn:'Reporte', resetBtn:'Reset',
+    voiceTitle:'🎙️ Dictado de Voz',
+    voiceHint:'<strong>iOS:</strong> toca el campo → pulsa 🎙 en el teclado<br><strong>Android:</strong> toca el campo → pulsa 🎙 en Gboard<br><strong>Mac:</strong> Fn+Fn · <strong>Win:</strong> Win+H',
+    voiceClose:'Cerrar', voicePlaceholder:'Escribe o activa el micrófono del teclado',
     chips:['normal','basal','micro','gema','bi','croma','cario','picno','lisis'],
-    chipsKeys:['diferenciada','basal','micronucleo','nbud','binucleada','cromatina','cariorrexis','picnosis','cariolisis'],
-    undoChip:'↩',
-    undoWords:['deshacer','borrar','eliminar','quitar','undo'],
-    notifGoal:'¡Meta de 2000 alcanzada!', notifDone:'🎉 ¡2000 células completadas!',
-    notifUndo:'↩ Deshecho: ', notifNoUndo:'Sin acciones para deshacer',
-    notifReset:'Conteo reiniciado', notifExport:'Sesión guardada',
-    notifImport:'Sesión cargada', notifImportErr:'Error al leer CSV.',
+    undoWords:['deshacer','borrar','eliminar','quitar'],
     feedbackOk:'✓ ', feedbackMulti:' registradas', feedbackErr:'No reconocido: ',
-    confirmReset:'¿Reiniciar el conteo? No se puede deshacer.',
-    rTotal:'Total', rDiff:'Dif+Genotóx.', rMN:'MN freq.', rNBUD:'NBUD freq.',
-    rDeath:'Muerte celular (CC+KR+PN+KL)', rDate:'Fecha', rProto:'Protocolo',
-    howtoLabel:'❓ Cómo activar el dictado / atajos',
-    howTo:[
-      {title:'📱 Móvil (iOS/Android)',
-       body:'1. Toca el campo de texto<br>2. Pulsa 🎙️ en el teclado<br>3. Di el nombre de la célula<br>4. Pausa → se registra solo'},
-      {title:'🍎 Mac',
-       body:'1. Clic en el campo<br>2. Presiona <kbd>Fn</kbd><kbd>Fn</kbd><br>3. Di el nombre<br>4. Pausa → se registra'},
-      {title:'🪟 Windows',
-       body:'1. Clic en el campo<br>2. Presiona <kbd>Win</kbd>+<kbd>H</kbd><br>3. Di el nombre<br>4. Pausa → se registra'},
-      {title:'⌨️ Atajos de teclado',
-       body:`<div class="shortcut-grid">
-        <div class="sk"><kbd>N</kbd><span>Normal / Diferenciada</span></div>
-        <div class="sk"><kbd>B</kbd><span>Basal</span></div>
-        <div class="sk"><kbd>M</kbd><span>Micronúcleo</span></div>
-        <div class="sk"><kbd>G</kbd><span>Gema (NBUD)</span></div>
-        <div class="sk"><kbd>I</kbd><span>Binucleada</span></div>
-        <div class="sk"><kbd>C</kbd><span>Cromatina Condensada</span></div>
-        <div class="sk"><kbd>R</kbd><span>Cariorrexis</span></div>
-        <div class="sk"><kbd>P</kbd><span>Picnosis</span></div>
-        <div class="sk"><kbd>L</kbd><span>Cariolisis</span></div>
-        <div class="sk"><kbd>Z</kbd><span>Deshacer último</span></div>
-       </div>`},
-    ],
+    reportTitle:'📊 REPORTE BMCyt', reportClose:'Cerrar',
+    thCat:'Categoría', thType:'Tipo', thCount:'N', thPer:'/1000',
+    rTotal:'Total', rMNF:'Frec. MN', rNBUDF:'Frec. NBUD', rDeath:'Muerte celular',
+    rDate:'Fecha', rProto:'Protocolo',
+    exportBtn:'Guardar CSV',
+    doneTitle:'¡META ALCANZADA!',
+    doneSub:'Has contado 2000 células.<br>Guarda tu sesión para registrar los resultados.',
+    doneExport:'Guardar CSV', doneReport:'Ver reporte completo', doneContinue:'Seguir contando',
+    notifUndo:'↩ Deshecho: ', notifNoUndo:'Sin acciones para deshacer',
+    notifReset:'Conteo reiniciado', notifExport:'Sesión guardada ✓',
+    notifGoal:'¡Meta de 2000 alcanzada!',
+    confirmReset:'¿Reiniciar el conteo? Esta acción no se puede deshacer.',
+    editParticipant:'Editar participante',
   },
   en:{
-    sections:['Normal Cells','Genomic Damage (Genotoxicity)','Cell Death (Cytotoxicity)'],
-    summaryTitle:'Summary', total:'TOTAL',
-    totalH:'Total', avance:'Progress', rest:'Remaining', prog:'PROGRESS',
-    report:'Full Report', export:'Save session (CSV)', import:'Load session (CSV)',
-    undo:'Undo last', reset:'Reset all', close:'Close',
-    placeholder:'Voice dictation — type or speak the cell type',
-    reportTitle:'📊 BMCyt REPORT',
-    thCat:'Category', thType:'Cell type', thCount:'Count', thPer:'/ 1000',
+    pid:'Participant ID', sample:'Sample #',
+    startNew:'Start new count', resumeSession:'Continue saved session',
+    newSession:'New session',
+    resumeTitle:'↩ Saved session found',
+    topRemain:'Left',
+    undoBtn:'Undo', voiceBtn:'Voice', reportBtn:'Report', resetBtn:'Reset',
+    voiceTitle:'🎙️ Voice Dictation',
+    voiceHint:'<strong>iOS:</strong> tap field → tap 🎙 on keyboard<br><strong>Android:</strong> tap field → tap 🎙 on Gboard<br><strong>Mac:</strong> Fn+Fn · <strong>Win:</strong> Win+H',
+    voiceClose:'Close', voicePlaceholder:'Type or activate keyboard microphone',
     chips:['normal','basal','micro','bud','bi','chroma','karyo','pyk','lysis'],
-    chipsKeys:['diferenciada','basal','micronucleo','nbud','binucleada','cromatina','cariorrexis','picnosis','cariolisis'],
-    undoChip:'↩',
     undoWords:['undo','delete','remove','erase','deshacer'],
-    notifGoal:'Goal of 2000 reached!', notifDone:'🎉 2000 cells completed!',
-    notifUndo:'↩ Undone: ', notifNoUndo:'Nothing to undo',
-    notifReset:'Count reset', notifExport:'Session saved',
-    notifImport:'Session loaded', notifImportErr:'Error reading CSV.',
     feedbackOk:'✓ ', feedbackMulti:' registered', feedbackErr:'Not recognized: ',
-    confirmReset:'Reset the entire count? Cannot be undone.',
-    rTotal:'Total', rDiff:'Diff+Genotox.', rMN:'MN freq.', rNBUD:'NBUD freq.',
-    rDeath:'Cell death (CC+KR+PN+KL)', rDate:'Date', rProto:'Protocol',
-    howtoLabel:'❓ How to activate dictation / shortcuts',
-    howTo:[
-      {title:'📱 Mobile (iOS/Android)',
-       body:'1. Tap the text field<br>2. Tap 🎙️ on the keyboard<br>3. Say the cell type<br>4. Pause → registers automatically'},
-      {title:'🍎 Mac',
-       body:'1. Click the field<br>2. Press <kbd>Fn</kbd><kbd>Fn</kbd><br>3. Say the name<br>4. Pause → registers'},
-      {title:'🪟 Windows',
-       body:'1. Click the field<br>2. Press <kbd>Win</kbd>+<kbd>H</kbd><br>3. Say the name<br>4. Pause → registers'},
-      {title:'⌨️ Keyboard shortcuts',
-       body:`<div class="shortcut-grid">
-        <div class="sk"><kbd>N</kbd><span>Normal / Differentiated</span></div>
-        <div class="sk"><kbd>B</kbd><span>Basal</span></div>
-        <div class="sk"><kbd>M</kbd><span>Micronucleus</span></div>
-        <div class="sk"><kbd>G</kbd><span>Nuclear Bud (NBUD)</span></div>
-        <div class="sk"><kbd>I</kbd><span>Binucleated</span></div>
-        <div class="sk"><kbd>C</kbd><span>Cond. Chromatin</span></div>
-        <div class="sk"><kbd>R</kbd><span>Karyorrhexis</span></div>
-        <div class="sk"><kbd>P</kbd><span>Pyknosis</span></div>
-        <div class="sk"><kbd>L</kbd><span>Karyolysis</span></div>
-        <div class="sk"><kbd>Z</kbd><span>Undo last</span></div>
-       </div>`},
-    ],
-  },
+    reportTitle:'📊 BMCyt REPORT', reportClose:'Close',
+    thCat:'Category', thType:'Type', thCount:'N', thPer:'/1000',
+    rTotal:'Total', rMNF:'MN freq.', rNBUDF:'NBUD freq.', rDeath:'Cell death',
+    rDate:'Date', rProto:'Protocol',
+    exportBtn:'Save CSV',
+    doneTitle:'GOAL REACHED!',
+    doneSub:'You\'ve counted 2000 cells.<br>Save your session to record the results.',
+    doneExport:'Save CSV', doneReport:'View full report', doneContinue:'Keep counting',
+    notifUndo:'↩ Undone: ', notifNoUndo:'Nothing to undo',
+    notifReset:'Count reset', notifExport:'Session saved ✓',
+    notifGoal:'Goal of 2000 reached!',
+    confirmReset:'Reset the entire count? This cannot be undone.',
+    editParticipant:'Edit participant',
+  }
 };
 
-// ═══════════════════════════════
+const CHIP_KEYS=['diferenciada','basal','micronucleo','nbud','binucleada','cromatina','cariorrexis','picnosis','cariolisis'];
+
+// ═══════════════════════════════════════
 // STATE
-// ═══════════════════════════════
-let lang='es';
-let cells={};
-CELL_DEFS.forEach(d=>cells[d.key]=0);
-let hist=[];
-let howtoOpen=false;
+// ═══════════════════════════════════════
+let lang = 'es';
+let state = {
+  participantId: '',
+  sampleNumber: '',
+  startTime: null,
+  cells: {},
+  history: [],
+  goalShown: false,
+};
+CELL_DEFS.forEach(d => state.cells[d.key] = 0);
 
-// ═══════════════════════════════
+// ═══════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════
+function saveState() {
+  try { localStorage.setItem('bmcyt_v7', JSON.stringify({lang, state})); } catch(e){}
+}
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem('bmcyt_v7');
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e){ return null; }
+}
+function clearSaved() {
+  try { localStorage.removeItem('bmcyt_v7'); } catch(e){}
+}
+
+// ═══════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════
+function g(id){ return document.getElementById(id); }
+function getTotal(){ return Object.values(state.cells).reduce((s,v)=>s+v,0); }
+function vibrate(ms){ try{ navigator.vibrate && navigator.vibrate(ms||25); }catch(e){} }
+function norm(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,''); }
+
+// ═══════════════════════════════════════
+// SCREEN MANAGEMENT
+// ═══════════════════════════════════════
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  g(id).classList.add('active');
+}
+
+// ═══════════════════════════════════════
 // LANGUAGE
-// ═══════════════════════════════
-function setLang(l){
-  lang=l;
-  g('btnES').className='lang-btn'+(l==='es'?' active':'');
-  g('btnEN').className='lang-btn'+(l==='en'?' active':'');
-  g('dictLangIcon').textContent='🎙️ '+l.toUpperCase();
-  g('dictInput').placeholder=UI[l].placeholder;
-  g('howtoToggleLabel').textContent=UI[l].howtoLabel;
-  renderGrid(); renderHowTo(); renderChips(); updateSummary(); updateLabels();
+// ═══════════════════════════════════════
+function setLang(l) {
+  lang = l;
+  g('btnES').className = 'lang-btn' + (l==='es'?' active':'');
+  g('btnEN').className = 'lang-btn' + (l==='en'?' active':'');
+  renderSetupLabels();
+  if (g('scCounter').classList.contains('active')) {
+    renderCounter();
+    updateProgress();
+    renderVoiceChips();
+    updateCounterLabels();
+  }
+  saveState();
 }
 
-function updateLabels(){
-  const u=UI[lang];
-  g('summaryTitle').textContent=u.summaryTitle;
-  g('labelTotal').textContent=u.total;
-  g('lbl-totalH').textContent=u.totalH;
-  g('lbl-avance').textContent=u.avance;
-  g('lbl-rest').textContent=u.rest;
-  g('lbl-prog').textContent=u.prog;
-  g('lbl-report').textContent=u.report;
-  g('lbl-export').textContent=u.export;
-  g('lbl-import').textContent=u.import;
-  g('lbl-undo').textContent=u.undo;
-  g('lbl-reset').textContent=u.reset;
-  g('btnClose').textContent=u.close;
-  g('th-cat').textContent=u.thCat;
-  g('th-type').textContent=u.thType;
-  g('th-count').textContent=u.thCount;
-  g('th-per').textContent=u.thPer;
+function renderSetupLabels() {
+  const u = UI[lang];
+  g('lbl-pid').innerHTML = u.pid + ' <span style="color:var(--red)">*</span>';
+  g('lbl-sample').textContent = u.sample;
+  const saved = loadSaved();
+  renderSetupActions(saved);
+  if (saved) renderResumeBanner(saved);
 }
 
-function g(id){return document.getElementById(id);}
-
-// ═══════════════════════════════
-// HOW-TO TOGGLE
-// ═══════════════════════════════
-function toggleHowto(){
-  howtoOpen=!howtoOpen;
-  g('howtoBody').className='howto-body'+(howtoOpen?' open':'');
-  g('howtoArrow').className='howto-arrow'+(howtoOpen?' open':'');
+// ═══════════════════════════════════════
+// SETUP SCREEN
+// ═══════════════════════════════════════
+function renderSetupActions(saved) {
+  const u = UI[lang];
+  const actions = g('setupActions');
+  if (saved && getCountFromSaved(saved) > 0) {
+    actions.innerHTML = `
+      <button class="btn-resume" onclick="resumeSession()">${u.resumeSession}</button>
+      <button class="btn-start"  onclick="startNewSession()">${u.startNew}</button>`;
+  } else {
+    actions.innerHTML = `<button class="btn-start" onclick="startNewSession()">${u.startNew}</button>`;
+  }
 }
 
-// ═══════════════════════════════
-// RENDER
-// ═══════════════════════════════
-function renderGrid(){
-  const u=UI[lang];
-  g('cellsGrid').innerHTML=SECTION_KEYS.map((keys,si)=>
-    `<div class="section-label">${u.sections[si]}</div>`+
-    keys.map(key=>{
-      const d=CELL_DEFS.find(x=>x.key===key);
-      const label=lang==='es'?d.labelEs:d.labelEn;
-      const tag  =lang==='es'?d.tagEs:d.tagEn;
-      const desc =lang==='es'?d.descEs:d.descEn;
-      const voice=lang==='es'?d.voiceEs:d.voiceEn;
-      const kb=Object.entries(KEY_MAP).find(([k,v])=>v===key)?.[0]?.toUpperCase()||'';
+function getCountFromSaved(saved) {
+  if (!saved || !saved.state || !saved.state.cells) return 0;
+  return Object.values(saved.state.cells).reduce((s,v)=>s+v,0);
+}
+
+function renderResumeBanner(saved) {
+  const banner = g('resumeBanner');
+  const info = g('resumeInfo');
+  const u = UI[lang];
+  const total = getCountFromSaved(saved);
+  const s = saved.state;
+  if (total > 0) {
+    g('resumeTitle').textContent = u.resumeTitle;
+    const pct = (total/GOAL*100).toFixed(1);
+    info.textContent = `${s.participantId || '—'} · Muestra ${s.sampleNumber || '—'} · ${total}/${GOAL} (${pct}%)`;
+    banner.style.display = 'block';
+  } else {
+    banner.style.display = 'none';
+  }
+}
+
+function startNewSession() {
+  const pid = g('inpParticipant').value.trim();
+  if (!pid) {
+    g('inpParticipant').focus();
+    g('inpParticipant').style.borderColor = 'var(--red)';
+    setTimeout(() => g('inpParticipant').style.borderColor = '', 1500);
+    showToast(lang==='es'?'Ingresa el ID del participante':'Enter participant ID','error');
+    return;
+  }
+  clearSaved();
+  CELL_DEFS.forEach(d => state.cells[d.key] = 0);
+  state.history = [];
+  state.goalShown = false;
+  state.participantId = pid;
+  state.sampleNumber = g('inpSample').value.trim();
+  state.startTime = new Date().toISOString();
+  saveState();
+  launchCounter();
+}
+
+function resumeSession() {
+  const saved = loadSaved();
+  if (!saved) return;
+  lang = saved.lang || 'es';
+  state = saved.state;
+  // ensure all cell keys exist
+  CELL_DEFS.forEach(d => { if(state.cells[d.key]==null) state.cells[d.key]=0; });
+  if (!state.history) state.history = [];
+  g('inpParticipant').value = state.participantId || '';
+  g('inpSample').value = state.sampleNumber || '';
+  launchCounter();
+}
+
+function launchCounter() {
+  showScreen('scCounter');
+  renderCounter();
+  updateProgress();
+  updateCounterLabels();
+  renderVoiceChips();
+  g('topParticipant').textContent = state.participantId + (state.sampleNumber ? ' · M'+state.sampleNumber : '');
+}
+
+function openEditParticipant() {
+  showScreen('scSetup');
+  const saved = loadSaved();
+  g('inpParticipant').value = state.participantId;
+  g('inpSample').value = state.sampleNumber;
+  renderSetupLabels();
+  if (saved && getCountFromSaved(saved) > 0) {
+    g('setupActions').innerHTML = `
+      <button class="btn-resume" onclick="applyEditParticipant()">${lang==='es'?'Actualizar y volver':'Update and go back'}</button>
+      <button class="btn-new" onclick="confirmFullReset()">${UI[lang].newSession}</button>`;
+  }
+}
+
+function applyEditParticipant() {
+  const pid = g('inpParticipant').value.trim();
+  if (!pid) { g('inpParticipant').focus(); return; }
+  state.participantId = pid;
+  state.sampleNumber = g('inpSample').value.trim();
+  saveState();
+  launchCounter();
+}
+
+function confirmFullReset() {
+  if (confirm(UI[lang].confirmReset)) {
+    clearSaved();
+    CELL_DEFS.forEach(d => state.cells[d.key] = 0);
+    state.history = []; state.goalShown = false;
+    state.participantId = ''; state.sampleNumber = '';
+    g('inpParticipant').value = ''; g('inpSample').value = '';
+    renderSetupLabels();
+    showToast(UI[lang].notifReset);
+  }
+}
+
+// ═══════════════════════════════════════
+// RENDER COUNTER
+// ═══════════════════════════════════════
+function renderCounter() {
+  const scroll = g('cellsScroll');
+  scroll.innerHTML = SECTIONS.map(sec => {
+    const sLabel = sec.lbl[lang] || sec.lbl.es;
+    const grid = sec.keys.map(key => {
+      const d = CELL_DEFS.find(x => x.key===key);
+      const label = lang==='es' ? d.labelEs : d.labelEn;
+      const tag   = lang==='es' ? d.tagEs   : d.tagEn;
       return `
-      <div class="cell-card" style="--card-color:${d.color}" data-key="${key}" onclick="addCell('${key}')">
-        <div class="card-top">
-          <div class="card-name">${label}</div>
-          <div class="card-shortcut">${voice} · <kbd>${kb}</kbd></div>
+      <div class="cell-btn" style="--cc:${d.color}" data-key="${key}" ontouchstart="" onclick="addCellBtn(event,'${key}')">
+        <div class="cell-btn-body">
+          <div class="cell-btn-name">${label}</div>
+          <div class="cell-btn-tag">${tag}</div>
+          <div class="cell-btn-count" id="cnt-${key}">${state.cells[key]}</div>
         </div>
-        <div class="card-count" id="count-${key}">${cells[key]}</div>
-        <div class="card-tag">${tag}</div>
-        <div class="card-desc">${desc}</div>
-        <div class="card-bar"><div class="card-bar-fill" id="bar-${key}" style="width:0%"></div></div>
-        <div class="btn-row">
-          <button class="btn-inc" onclick="event.stopPropagation();addCell('${key}')">＋</button>
-          <button class="btn-dec" onclick="event.stopPropagation();removeCell('${key}')">−</button>
-          <button class="btn-rst" onclick="event.stopPropagation();resetOne('${key}')">↺</button>
-        </div>
+        <button class="cell-btn-minus" onclick="removeCellBtn(event,'${key}')">−</button>
       </div>`;
-    }).join('')
-  ).join('');
-  refreshAllBars();
+    }).join('');
+    return `
+    <div class="section-lbl" style="--section-color:${sec.color}">
+      <div class="section-dot"></div>${sLabel}
+    </div>
+    <div class="cell-grid cols-${sec.cols}">${grid}</div>`;
+  }).join('');
 }
 
-function renderHowTo(){
-  g('howToGrid').innerHTML=UI[lang].howTo.map(c=>
-    `<div class="how-card"><div class="how-card-title">${c.title}</div><div class="how-card-body">${c.body}</div></div>`
-  ).join('');
+function updateCounterLabels() {
+  const u = UI[lang];
+  g('lbl-topRemain').textContent = u.topRemain;
+  g('lbl-undo').textContent  = u.undoBtn;
+  g('lbl-voice').textContent = u.voiceBtn;
+  g('lbl-report').textContent= u.reportBtn;
+  g('lbl-reset').textContent = u.resetBtn;
+  g('lbl-voice').textContent = u.voiceBtn;
 }
 
-function renderChips(){
-  const u=UI[lang];
-  g('chipsRow').innerHTML=
-    u.chips.map((label,i)=>
-      `<span class="chip" onclick="addCell('${u.chipsKeys[i]}')">${label}</span>`
-    ).join('')+
-    `<span class="chip undo" onclick="undoLast()">${u.undoChip}</span>`;
-}
-
-// ═══════════════════════════════
+// ═══════════════════════════════════════
 // COUNTER CORE
-// ═══════════════════════════════
-function getTotal(){return Object.values(cells).reduce((s,v)=>s+v,0);}
-
-function addCell(key){
-  if(getTotal()>=GOAL){showNotif(UI[lang].notifGoal,'success');return;}
-  cells[key]++;
-  hist.push({key,a:'add'});
-  refreshCard(key);updateProgress();flash(key);
+// ═══════════════════════════════════════
+function addCellBtn(event, key) {
+  addCell(key);
+}
+function removeCellBtn(event, key) {
+  event.stopPropagation();
+  removeCell(key);
 }
 
-function removeCell(key){
-  if(cells[key]>0){cells[key]--;hist.push({key,a:'sub'});refreshCard(key);updateProgress();}
+let _tapLock = {};
+function addCell(key) {
+  if (_tapLock[key]) return;
+  _tapLock[key] = true;
+  setTimeout(() => delete _tapLock[key], 120);
+
+  const total = getTotal();
+  if (total >= GOAL) {
+    showToast(UI[lang].notifGoal, 'success');
+    return;
+  }
+  state.cells[key]++;
+  state.history.push({key, a:'add'});
+  vibrate(22);
+  refreshCount(key);
+  updateProgress();
+  flashCard(key);
+  saveState();
+  checkGoal();
 }
 
-function resetOne(key){
-  cells[key]=0;hist=hist.filter(h=>h.key!==key);
-  refreshCard(key);updateProgress();
-}
-
-function undoLast(){
-  if(!hist.length){showNotif(UI[lang].notifNoUndo,'error');return;}
-  const last=hist.pop();
-  if(last.a==='add') cells[last.key]=Math.max(0,cells[last.key]-1);
-  else cells[last.key]++;
-  refreshCard(last.key);updateProgress();
-  const def=CELL_DEFS.find(d=>d.key===last.key);
-  showNotif(UI[lang].notifUndo+(lang==='es'?def.labelEs:def.labelEn));
-}
-
-function confirmReset(){
-  if(confirm(UI[lang].confirmReset)){
-    CELL_DEFS.forEach(d=>cells[d.key]=0);hist=[];
-    renderGrid();updateProgress();updateSummary();
-    showNotif(UI[lang].notifReset);
+function removeCell(key) {
+  if (state.cells[key] > 0) {
+    state.cells[key]--;
+    state.history.push({key, a:'sub'});
+    vibrate(15);
+    refreshCount(key);
+    updateProgress();
+    saveState();
   }
 }
 
-// ═══════════════════════════════
-// DICTATION — cooldown strategy
-// ═══════════════════════════════
-const dictInput =g('dictInput');
-const dictStatus=g('dictStatus');
-const dictInner =g('dictInner');
-
-let dictTimer=null, cooldownActive=false, cooldownTimer=null;
-
-dictInput.addEventListener('input',()=>{
-  if(cooldownActive){dictInput.value='';return;}
-  clearTimeout(dictTimer);
-  const text=dictInput.value.trim();
-  if(!text) return;
-  dictTimer=setTimeout(triggerProcess,700);
-});
-
-dictInput.addEventListener('keydown',e=>{
-  if(!e.ctrlKey&&!e.metaKey&&!e.altKey&&e.key.length===1){
-    const k=e.key.toLowerCase();
-    if(KEY_MAP[k]){e.preventDefault();addCell(KEY_MAP[k]);return;}
-    if(k==='z'){e.preventDefault();undoLast();return;}
+function undoLast() {
+  if (!state.history.length) {
+    showToast(UI[lang].notifNoUndo, 'error');
+    vibrate([10,50,10]);
+    return;
   }
-  if(e.key==='Enter'){clearTimeout(dictTimer);triggerProcess();e.preventDefault();}
+  const last = state.history.pop();
+  if (last.a==='add') state.cells[last.key] = Math.max(0, state.cells[last.key]-1);
+  else state.cells[last.key]++;
+  vibrate(30);
+  refreshCount(last.key);
+  updateProgress();
+  saveState();
+  const def = CELL_DEFS.find(d=>d.key===last.key);
+  const label = lang==='es' ? def.labelEs : def.labelEn;
+  showToast(UI[lang].notifUndo + label);
+}
+
+function confirmReset() {
+  if (confirm(UI[lang].confirmReset)) {
+    CELL_DEFS.forEach(d => state.cells[d.key]=0);
+    state.history = [];
+    state.goalShown = false;
+    renderCounter();
+    updateProgress();
+    saveState();
+    showToast(UI[lang].notifReset);
+  }
+}
+
+function checkGoal() {
+  if (getTotal()===GOAL && !state.goalShown) {
+    state.goalShown = true;
+    setTimeout(() => openDone(), 400);
+  }
+}
+
+// ═══════════════════════════════════════
+// PROGRESS & UI UPDATE
+// ═══════════════════════════════════════
+function refreshCount(key) {
+  const el = g('cnt-'+key);
+  if (el) el.textContent = state.cells[key];
+}
+
+function updateProgress() {
+  const total = getTotal();
+  const pct = Math.min(100, total/GOAL*100);
+  const remain = Math.max(0, GOAL-total);
+  g('topTotal').textContent   = total;
+  g('topRemain').textContent  = remain;
+  g('progressFill').style.width = pct+'%';
+  [500,1000,1500,2000].forEach((m,i,arr)=>{
+    const el = g('ms'+m);
+    if (!el) return;
+    if (total>=m) el.className='ms reached';
+    else if (total>=(arr[i-1]||0)) el.className='ms active';
+    else el.className='ms';
+  });
+}
+
+function flashCard(key) {
+  const card = document.querySelector(`[data-key="${key}"]`);
+  if (!card) return;
+  card.classList.add('flash');
+  setTimeout(() => card.classList.remove('flash'), 240);
+}
+
+// ═══════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════
+function showToast(msg, type='') {
+  const t = g('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type?' '+type:'');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className='toast', 2600);
+}
+
+// ═══════════════════════════════════════
+// VOICE MODAL
+// ═══════════════════════════════════════
+let voiceTimer = null, voiceCooldown = false;
+
+function openVoice() {
+  const u = UI[lang];
+  g('voiceTitle').textContent = u.voiceTitle;
+  g('voiceHint').innerHTML    = u.voiceHint;
+  g('lbl-voiceClose').textContent = u.voiceClose;
+  g('voiceInput').placeholder = u.voicePlaceholder;
+  g('voiceInput').value = '';
+  g('voiceStatus').textContent = '—';
+  g('voiceStatus').className = 'voice-status';
+  g('voiceWrap').className = 'voice-input-wrap';
+  g('voiceModal').classList.add('open');
+  setTimeout(() => g('voiceInput').focus(), 300);
+}
+
+function closeVoice() {
+  g('voiceModal').classList.remove('open');
+  g('voiceInput').value = '';
+}
+
+function clearVoice() {
+  clearTimeout(voiceTimer);
+  voiceCooldown = false;
+  g('voiceInput').value = '';
+  g('voiceStatus').textContent = '—';
+  g('voiceStatus').className = 'voice-status';
+  g('voiceWrap').className = 'voice-input-wrap';
+}
+
+function renderVoiceChips() {
+  const u = UI[lang];
+  g('voiceChips').innerHTML =
+    u.chips.map((label,i) =>
+      `<span class="vchip" onclick="addCell('${CHIP_KEYS[i]}');closeVoice()">${label}</span>`
+    ).join('');
+}
+
+g('voiceInput').addEventListener('input', () => {
+  if (voiceCooldown) { g('voiceInput').value=''; return; }
+  clearTimeout(voiceTimer);
+  const text = g('voiceInput').value.trim();
+  if (!text) return;
+  voiceTimer = setTimeout(() => triggerVoice(), 650);
 });
 
-function triggerProcess(){
-  const text=dictInput.value.trim();
-  if(!text) return;
-  startCooldown();
-  processChunk(text);
+g('voiceInput').addEventListener('keydown', e => {
+  if (e.key==='Enter') { clearTimeout(voiceTimer); triggerVoice(); e.preventDefault(); }
+});
+
+function triggerVoice() {
+  const text = g('voiceInput').value.trim();
+  if (!text) return;
+  processVoice(text);
+  voiceCooldown = true;
+  g('voiceInput').value = '';
+  setTimeout(() => { voiceCooldown=false; }, 400);
 }
 
-function startCooldown(){
-  cooldownActive=true;
-  dictInput.value='';
-  clearTimeout(cooldownTimer);
-  cooldownTimer=setTimeout(()=>{cooldownActive=false;},450);
-}
-
-function manualClear(){
-  clearTimeout(dictTimer);
-  startCooldown();
-  setFeedback('','');
-}
-
-function norm(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
-
-function matchWord(word,map){
-  for(const entry of map){
-    for(const trigger of entry.w){
-      const t=norm(trigger);
-      if(word===t) return entry.k;
-      if(word.startsWith(t)&&t.length>=3) return entry.k;
-      if(t.startsWith(word)&&word.length>=3) return entry.k;
+function matchWord(word, map) {
+  for (const entry of map) {
+    for (const trigger of entry.w) {
+      const t = norm(trigger);
+      if (word===t) return entry.k;
+      if (word.startsWith(t) && t.length>=3) return entry.k;
+      if (t.startsWith(word) && word.length>=3) return entry.k;
     }
   }
   return null;
 }
 
-function processChunk(text){
-  const u=UI[lang];
-  const pMap=lang==='es'?CMD_ES:CMD_EN;
-  const fMap=lang==='es'?CMD_EN:CMD_ES;
-  const words=norm(text).split(/[\s,;.:!?()\-]+/).filter(Boolean);
+function processVoice(text) {
+  const u = UI[lang];
+  const pMap = lang==='es' ? CMD_ES : CMD_EN;
+  const fMap = lang==='es' ? CMD_EN : CMD_ES;
+  const words = norm(text).split(/[\s,;.:!?()\-]+/).filter(Boolean);
 
-  if(words.some(w=>u.undoWords.includes(w))){undoLast();setFeedback('↩','ok');return;}
+  if (words.some(w => u.undoWords.includes(w))) {
+    undoLast(); setVoiceFeedback('↩','ok'); return;
+  }
 
-  let count=0,lastLabel='';
-  for(const word of words){
-    const matched=matchWord(word,pMap)||matchWord(word,fMap);
-    if(matched){
-      addCell(matched);count++;
-      const def=CELL_DEFS.find(d=>d.key===matched);
-      lastLabel=lang==='es'?def.labelEs:def.labelEn;
+  let count=0, lastLabel='';
+  for (const word of words) {
+    const matched = matchWord(word,pMap) || matchWord(word,fMap);
+    if (matched) {
+      addCell(matched); count++;
+      const def = CELL_DEFS.find(d=>d.key===matched);
+      lastLabel = lang==='es' ? def.labelEs : def.labelEn;
     }
   }
-  if(count===1) setFeedback(u.feedbackOk+lastLabel,'ok');
-  else if(count>1) setFeedback('✓ '+count+u.feedbackMulti,'ok');
-  else setFeedback(u.feedbackErr+'"'+text+'"','err');
+  if (count===1) setVoiceFeedback(u.feedbackOk+lastLabel, 'ok');
+  else if (count>1) setVoiceFeedback('✓ '+count+u.feedbackMulti, 'ok');
+  else setVoiceFeedback(u.feedbackErr+'"'+text+'"', 'err');
 }
 
-function setFeedback(msg,type){
-  dictStatus.textContent=msg;
-  dictStatus.className='dictation-status '+(type||'');
-  dictInner.className='dictation-inner '+(type==='ok'?'matched':type==='err'?'no-match':'');
-  clearTimeout(dictInner._t);
-  dictInner._t=setTimeout(()=>{
-    dictInner.className='dictation-inner';
-    dictStatus.textContent='—';
-    dictStatus.className='dictation-status';
-  },2200);
+function setVoiceFeedback(msg, type) {
+  const st = g('voiceStatus');
+  const wr = g('voiceWrap');
+  st.textContent = msg;
+  st.className   = 'voice-status ' + (type||'');
+  wr.className   = 'voice-input-wrap ' + (type==='ok'?'matched':type==='err'?'no-match':'');
+  clearTimeout(wr._t);
+  wr._t = setTimeout(() => {
+    wr.className = 'voice-input-wrap';
+    st.textContent='—'; st.className='voice-status';
+  }, 2000);
 }
 
-// Global shortcuts (when field not focused)
-document.addEventListener('keydown',e=>{
-  if(e.target===dictInput) return;
-  if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON'||e.target.tagName==='TEXTAREA') return;
-  if(e.ctrlKey||e.metaKey||e.altKey) return;
-  const k=e.key.toLowerCase();
-  if(KEY_MAP[k]){addCell(KEY_MAP[k]);return;}
-  if(k==='z') undoLast();
-});
+// close voice modal on overlay tap
+g('voiceModal').addEventListener('click', e => { if(e.target===g('voiceModal')) closeVoice(); });
 
-// ═══════════════════════════════
-// UI UPDATE
-// ═══════════════════════════════
-function refreshCard(key){
-  const cnt=g('count-'+key);
-  if(cnt) cnt.textContent=cells[key];
-  refreshAllBars();updateSummary();
-}
+// ═══════════════════════════════════════
+// REPORT MODAL
+// ═══════════════════════════════════════
+function openReport() {
+  const u = UI[lang];
+  const total = getTotal();
+  g('reportTitle').textContent = u.reportTitle;
+  g('lbl-reportClose').textContent = u.reportClose;
+  g('th-cat').textContent   = u.thCat;
+  g('th-type').textContent  = u.thType;
+  g('th-count').textContent = u.thCount;
+  g('th-per').textContent   = u.thPer;
+  g('lbl-exportBtn').textContent = u.exportBtn;
 
-function refreshAllBars(){
-  const total=getTotal();
-  CELL_DEFS.forEach(d=>{
-    const bar=g('bar-'+d.key);
-    if(bar) bar.style.width=total>0?(cells[d.key]/total*100)+'%':'0%';
-  });
-}
+  // stats
+  const diff = state.cells.diferenciada+state.cells.micronucleo+state.cells.nbud+state.cells.binucleada;
+  const mnF  = diff>0 ? (state.cells.micronucleo/diff*1000).toFixed(2) : 'N/A';
+  const nF   = diff>0 ? (state.cells.nbud/diff*1000).toFixed(2) : 'N/A';
+  const death= state.cells.cromatina+state.cells.cariorrexis+state.cells.picnosis+state.cells.cariolisis;
+  g('reportStats').innerHTML = `
+    <div class="r-stat"><div class="r-stat-val">${total}</div><div class="r-stat-lbl">${u.rTotal}</div></div>
+    <div class="r-stat"><div class="r-stat-val">${total>0?(total/GOAL*100).toFixed(1)+'%':'0%'}</div><div class="r-stat-lbl">Avance</div></div>
+    <div class="r-stat"><div class="r-stat-val">${mnF}</div><div class="r-stat-lbl">${u.rMNF}/1000</div></div>
+    <div class="r-stat"><div class="r-stat-val">${nF}</div><div class="r-stat-lbl">${u.rNBUDF}/1000</div></div>`;
 
-function updateProgress(){
-  const total=getTotal(),pct=Math.min(100,total/GOAL*100);
-  g('totalCount').textContent=total;
-  g('pctCount').textContent=pct.toFixed(1)+'%';
-  g('remainCount').textContent=Math.max(0,GOAL-total);
-  g('progressFill').style.width=pct+'%';
-  g('progressLabel').textContent=total+' / '+GOAL;
-  [500,1000,1500,2000].forEach((m,i,arr)=>{
-    const e2=g('ms'+m);
-    if(total>=m) e2.className='ms reached';
-    else if(total>=(arr[i-1]||0)) e2.className='ms active';
-    else e2.className='ms';
-  });
-  if(total===GOAL) showNotif(UI[lang].notifDone,'success');
-}
-
-function updateSummary(){
-  const total=getTotal();
-  g('summaryRows').innerHTML=CELL_DEFS.map(d=>{
-    const label=lang==='es'?d.labelEs:d.labelEn;
-    const pct=total>0?(cells[d.key]/total*100).toFixed(1):'0.0';
-    return `<div class="summary-row"><span class="s-name">${label}</span><span class="s-val">${cells[d.key]}</span><span class="s-pct">${pct}%</span></div>`;
+  // table
+  g('reportBody').innerHTML = CELL_DEFS.map(d => {
+    const label = lang==='es' ? d.labelEs : d.labelEn;
+    const cat   = lang==='es' ? d.catEs   : d.catEn;
+    const pct   = total>0 ? (state.cells[d.key]/total*100).toFixed(2) : '0.00';
+    const p1k   = total>0 ? (state.cells[d.key]/total*1000).toFixed(2) : '0.00';
+    return `<tr>
+      <td><span class="cat-badge ${d.catClass}">${cat}</span></td>
+      <td>${label}</td>
+      <td>${state.cells[d.key]}</td>
+      <td>${pct}%</td>
+      <td>${p1k}</td>
+    </tr>`;
   }).join('');
-  g('summaryTotal').textContent=total;
-  g('summaryPct').textContent=total>0?(total/GOAL*100).toFixed(1)+'%':'0%';
-}
 
-function flash(key){
-  const card=document.querySelector('[data-key="'+key+'"]');
-  if(!card) return;
-  card.classList.add('flash');
-  setTimeout(()=>card.classList.remove('flash'),260);
-}
-
-function showNotif(msg,type=''){
-  const n=g('notification');
-  n.textContent=msg;n.className='notification show'+(type?' '+type:'');
-  clearTimeout(n._t);n._t=setTimeout(()=>n.className='notification',2800);
-}
-
-// ═══════════════════════════════
-// REPORT
-// ═══════════════════════════════
-function showReport(){
-  const u=UI[lang],total=getTotal();
-  g('reportTitle').textContent=u.reportTitle;
-  g('reportBody').innerHTML=CELL_DEFS.map(d=>{
-    const label=lang==='es'?d.labelEs:d.labelEn,cat=lang==='es'?d.catEs:d.catEn;
-    const pct=total>0?(cells[d.key]/total*100).toFixed(2):'0.00';
-    const p1k=total>0?(cells[d.key]/total*1000).toFixed(2):'0.00';
-    return `<tr><td>${cat}</td><td>${label}</td><td>${cells[d.key]}</td><td>${pct}%</td><td>${p1k}</td></tr>`;
-  }).join('');
-  const diff=cells.diferenciada+cells.micronucleo+cells.nbud+cells.binucleada;
-  const mnF=diff>0?(cells.micronucleo/diff*1000).toFixed(2):'N/A';
-  const nF=diff>0?(cells.nbud/diff*1000).toFixed(2):'N/A';
-  const death=cells.cromatina+cells.cariorrexis+cells.picnosis+cells.cariolisis;
-  g('reportFooter').innerHTML=
-    `${u.rTotal}: ${total}/${GOAL} | ${u.rDiff}: ${diff} | ${u.rMN}: ${mnF}/1000 | ${u.rNBUD}: ${nF}/1000<br>`+
+  g('reportFooter').innerHTML =
+    `${u.rTotal}: ${total}/${GOAL} | ${u.rMNF}: ${mnF}/1000 | ${u.rNBUDF}: ${nF}/1000<br>`+
     `${u.rDeath}: ${death} | ${u.rDate}: ${new Date().toLocaleString(lang==='es'?'es-MX':'en-US')}<br>`+
     `${u.rProto}: BMCyt HUMNxl — Bolognesi et al. 2013 · Thomas et al. 2009`;
+
   g('reportModal').classList.add('open');
 }
-function closeModal(){g('reportModal').classList.remove('open');}
 
-// ═══════════════════════════════
-// CSV
-// ═══════════════════════════════
-function exportCSV(){
-  const total=getTotal(),now=new Date();
-  let csv='#BMCyt_SESSION\n';
-  csv+=`#Date,${now.toISOString()}\n#Protocol,HUMNxl Bolognesi 2013\n#Goal,${GOAL}\n#Lang,${lang}\n\n`;
-  csv+='key,label_es,label_en,category_es,category_en,count,pct,per_1000\n';
-  CELL_DEFS.forEach(d=>{
-    const pct=total>0?(cells[d.key]/total*100).toFixed(2):'0.00';
-    const p1k=total>0?(cells[d.key]/total*1000).toFixed(2):'0.00';
-    csv+=`${d.key},${d.labelEs},${d.labelEn},${d.catEs},${d.catEn},${cells[d.key]},${pct},${p1k}\n`;
+function closeReport() { g('reportModal').classList.remove('open'); }
+
+// ═══════════════════════════════════════
+// DONE MODAL
+// ═══════════════════════════════════════
+function openDone() {
+  const u = UI[lang];
+  g('doneTitle').textContent   = u.doneTitle;
+  g('doneSub').innerHTML       = u.doneSub;
+  g('lbl-doneExport').textContent   = u.doneExport;
+  g('lbl-doneReport').textContent   = u.doneReport;
+  g('lbl-doneContinue').textContent = u.doneContinue;
+  g('doneModal').classList.add('open');
+}
+function closeDone() { g('doneModal').classList.remove('open'); }
+
+// ═══════════════════════════════════════
+// CSV EXPORT
+// ═══════════════════════════════════════
+function exportCSV() {
+  const total = getTotal();
+  const now   = new Date();
+  let csv = '#BMCyt_SESSION_v7\n';
+  csv += `#Participant,${state.participantId}\n`;
+  csv += `#Sample,${state.sampleNumber||''}\n`;
+  csv += `#Date,${now.toISOString()}\n`;
+  csv += `#Protocol,HUMNxl Bolognesi 2013\n`;
+  csv += `#Goal,${GOAL}\n#Lang,${lang}\n\n`;
+  csv += 'key,label_es,label_en,category_es,category_en,count,pct,per_1000\n';
+
+  const diff = state.cells.diferenciada+state.cells.micronucleo+state.cells.nbud+state.cells.binucleada;
+  CELL_DEFS.forEach(d => {
+    const pct = total>0 ? (state.cells[d.key]/total*100).toFixed(2) : '0.00';
+    const p1k = total>0 ? (state.cells[d.key]/total*1000).toFixed(2) : '0.00';
+    csv += `${d.key},${d.labelEs},${d.labelEn},${d.catEs},${d.catEn},${state.cells[d.key]},${pct},${p1k}\n`;
   });
-  csv+=`\n#TOTAL,${total},,,,${total},,\n`;
-  const ds=now.toISOString().replace(/[:.]/g,'-').slice(0,16);
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
-  a.download=`BMCyt_session_${ds}.csv`;a.click();
-  showNotif(UI[lang].notifExport,'success');
+  const mnF = diff>0?(state.cells.micronucleo/diff*1000).toFixed(2):'N/A';
+  const nF  = diff>0?(state.cells.nbud/diff*1000).toFixed(2):'N/A';
+  csv += `\n#TOTAL,${total},,,,${total},,\n`;
+  csv += `#MN_FREQ_PER_1000,${mnF}\n#NBUD_FREQ_PER_1000,${nF}\n`;
+
+  const ds = now.toISOString().replace(/[:.]/g,'-').slice(0,16);
+  const pid = state.participantId.replace(/[^a-zA-Z0-9_-]/g,'_');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download = `BMCyt_${pid}_${ds}.csv`;
+  a.click();
+  showToast(UI[lang].notifExport, 'success');
 }
 
-function importCSV(event){
-  const file=event.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=e=>{
-    try{
-      const lines=e.target.result.split('\n');let loaded=false;
-      for(const line of lines){
-        const t=line.trim();
-        if(!t||t.startsWith('#')||t.startsWith('key,'))continue;
-        const parts=t.split(',');if(parts.length<6)continue;
-        const key=parts[0].trim(),count=parseInt(parts[5].trim(),10);
-        if(cells.hasOwnProperty(key)&&!isNaN(count)&&count>=0){cells[key]=count;loaded=true;}
-      }
-      if(!loaded)throw new Error();
-      hist=[];renderGrid();updateProgress();updateSummary();
-      showNotif(UI[lang].notifImport,'success');
-    }catch(err){showNotif(UI[lang].notifImportErr,'error');}
-    event.target.value='';
-  };
-  reader.readAsText(file);
-}
+// ═══════════════════════════════════════
+// KEYBOARD SHORTCUTS (desktop / BT keyboards)
+// ═══════════════════════════════════════
+const KEY_MAP={n:'diferenciada',b:'basal',m:'micronucleo',g:'nbud',
+               i:'binucleada',c:'cromatina',r:'cariorrexis',p:'picnosis',l:'cariolisis'};
 
-// ═══════════════════════════════
+document.addEventListener('keydown', e => {
+  if (!g('scCounter').classList.contains('active')) return;
+  if (e.target===g('voiceInput')) return;
+  if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if (e.ctrlKey||e.metaKey||e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (KEY_MAP[k]){ addCell(KEY_MAP[k]); return; }
+  if (k==='z') undoLast();
+});
+
+// ═══════════════════════════════════════
 // INIT
-// ═══════════════════════════════
-renderGrid();renderHowTo();renderChips();updateSummary();updateProgress();updateLabels();
+// ═══════════════════════════════════════
+function init() {
+  const saved = loadSaved();
+  if (saved) {
+    lang = saved.lang || 'es';
+    g('btnES').className = 'lang-btn' + (lang==='es'?' active':'');
+    g('btnEN').className = 'lang-btn' + (lang==='en'?' active':'');
+    if (saved.state) {
+      g('inpParticipant').value = saved.state.participantId || '';
+      g('inpSample').value = saved.state.sampleNumber || '';
+    }
+    renderResumeBanner(saved);
+  }
+  renderSetupLabels();
+}
+
+init();
 </script>
 </body>
 </html>
