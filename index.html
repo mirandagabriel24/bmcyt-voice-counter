@@ -240,6 +240,34 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 }
 .cols-1 .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 
+/* ── TWO-PANE LAYOUT (Genomic | Cell Death) ── */
+.two-pane{display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;}
+.pane{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
+.pane .cell-btn{min-height:72px;}
+.pane .cell-btn-body{
+  flex:1;display:flex;flex-direction:column;
+  justify-content:space-between;padding:9px 10px 5px;
+}
+.pane .cell-btn-name{font-size:11px;font-weight:700;color:var(--text);line-height:1.3;}
+.pane .cell-btn-tag{font-size:7px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+.pane .cell-btn-count{
+  font-family:var(--mono);font-size:30px;font-weight:700;
+  color:var(--cc);line-height:1;margin:4px 0 4px;
+}
+.pane .cell-btn-minus{
+  border-top:1px solid var(--border);padding:5px;text-align:center;
+  font-size:16px;color:var(--muted);background:transparent;border:none;
+  border-top:1px solid var(--border);cursor:pointer;touch-action:manipulation;
+  width:100%;min-height:30px;display:flex;align-items:center;justify-content:center;
+}
+.pane .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
+.pane .mn-extra-row{padding:6px 8px;gap:4px;}
+.pane .mn-extra-label{font-size:8px;}
+.pane .mn-extra-val{font-size:16px;min-width:30px;}
+.pane .mn-extra-btn{width:26px;height:36px;font-size:20px;}
+.pane .mn-total-row{padding:3px 8px 7px;font-size:8px;gap:6px;}
+.pane [data-key="micronucleo"]{flex:4;}
+
 /* ── MN EXTRA COUNTER ── */
 .mn-extra-row{
   border-top:1px solid var(--border);
@@ -741,12 +769,11 @@ const CELL_DEFS = [
 const SECTIONS = [
   {lbl:{es:'Células Normales',en:'Normal Cells'}, cols:2, color:'#10b981',
    keys:['diferenciada','basal']},
-  {lbl:{es:'Daño Genómico',en:'Genomic Damage'}, cols:1, color:'#f59e0b',
-   keys:['micronucleo'], mnCard:true},           // MN gets full-width special card
-  {lbl:null, cols:2, color:'#f59e0b',
-   keys:['nbud','binucleada']},                  // rest of genotoxic, no repeat label
-  {lbl:{es:'Muerte Celular',en:'Cell Death'}, cols:2, color:'#ef4444',
-   keys:['cromatina','cariorrexis','picnosis','cariolisis']},
+  {twoPanes:true,
+   left: {lbl:{es:'Daño Genómico',en:'Genomic Damage'}, color:'#f59e0b',
+          keys:['micronucleo','nbud','binucleada']},
+   right:{lbl:{es:'Muerte Celular',en:'Cell Death'}, color:'#ef4444',
+          keys:['cromatina','cariorrexis','picnosis','cariolisis']}},
 ];
 
 const CMD_ES=[
@@ -1021,51 +1048,62 @@ function confirmFullReset() {
 // ═══════════════════════════════════════
 // RENDER COUNTER
 // ═══════════════════════════════════════
+function renderPane(pane) {
+  const labelHtml = pane.lbl
+    ? `<div class="section-lbl" style="--section-color:${pane.color}">
+         <div class="section-dot"></div>${pane.lbl[lang]||pane.lbl.es}
+       </div>`
+    : '';
+  const cards = pane.keys.map(key => {
+    const d = CELL_DEFS.find(x => x.key===key);
+    const label = lang==='es' ? d.labelEs : d.labelEn;
+    const tag   = lang==='es' ? d.tagEs   : d.tagEn;
+    if (key==='micronucleo') {
+      const mnExtraLbl = lang==='es' ? 'MN extra' : 'Extra MN';
+      const mnCellsLbl = lang==='es' ? 'cél.' : 'cells';
+      const totalMN = state.cells.micronucleo + (state.mnExtra||0);
+      return `
+      <div class="cell-btn" style="--cc:${d.color}" data-key="micronucleo" ontouchstart="" onclick="addCellBtn(event,'micronucleo')">
+        <div class="cell-btn-body" style="flex-direction:row;align-items:center;gap:8px;justify-content:space-between;">
+          <div><div class="cell-btn-name">${label}</div><div class="cell-btn-tag">${tag}</div></div>
+          <div class="cell-btn-count" id="cnt-micronucleo" style="font-size:26px;padding:0;">${state.cells.micronucleo}</div>
+        </div>
+        <button class="cell-btn-minus" onclick="removeCellBtn(event,'micronucleo')">−</button>
+        <div class="mn-extra-row" onclick="event.stopPropagation()">
+          <span class="mn-extra-label">${mnExtraLbl}</span>
+          <span class="mn-extra-val" id="mnExtraVal">${state.mnExtra||0}</span>
+          <button class="mn-extra-btn" onclick="addMNExtra()">＋</button>
+          <button class="mn-extra-btn" onclick="removeMNExtra()">−</button>
+        </div>
+        <div class="mn-total-row" onclick="event.stopPropagation()">
+          Total: <span>${totalMN}</span>&nbsp;·&nbsp;${state.cells.micronucleo} ${mnCellsLbl}+${state.mnExtra||0}
+        </div>
+      </div>`;
+    }
+    return `
+    <div class="cell-btn" style="--cc:${d.color}" data-key="${key}" ontouchstart="" onclick="addCellBtn(event,'${key}')">
+      <div class="cell-btn-body">
+        <div class="cell-btn-name">${label}</div>
+        <div class="cell-btn-tag">${tag}</div>
+        <div class="cell-btn-count" id="cnt-${key}">${state.cells[key]}</div>
+      </div>
+      <button class="cell-btn-minus" onclick="removeCellBtn(event,'${key}')">−</button>
+    </div>`;
+  }).join('');
+  return `<div class="pane">${labelHtml}${cards}</div>`;
+}
+
 function renderCounter() {
   const scroll = g('cellsScroll');
   scroll.innerHTML = SECTIONS.map(sec => {
-    // Section label (skip if null — continuation of previous section)
+    if (sec.twoPanes) {
+      return `<div class="two-pane">${renderPane(sec.left)}${renderPane(sec.right)}</div>`;
+    }
     const labelHtml = sec.lbl
       ? `<div class="section-lbl" style="--section-color:${sec.color}">
            <div class="section-dot"></div>${sec.lbl[lang]||sec.lbl.es}
          </div>`
       : '';
-
-    // Special full-width MN card
-    if (sec.mnCard) {
-      const d = CELL_DEFS.find(x => x.key==='micronucleo');
-      const label = lang==='es' ? d.labelEs : d.labelEn;
-      const tag   = lang==='es' ? d.tagEs   : d.tagEn;
-      const mnExtraLbl = lang==='es' ? 'MN extra (célula multiplex)' : 'Extra MN (multiplex cell)';
-      const mnTotalLbl = lang==='es' ? 'Total MN' : 'Total MN';
-      const mnCellsLbl = lang==='es' ? 'células MN' : 'MN cells';
-      const totalMN = state.cells.micronucleo + (state.mnExtra||0);
-      return labelHtml + `
-      <div class="cell-grid cols-1" style="margin-bottom:4px">
-        <div class="cell-btn" style="--cc:${d.color}" data-key="micronucleo" ontouchstart="" onclick="addCellBtn(event,'micronucleo')">
-          <div class="cell-btn-body" style="padding:10px 14px 6px;flex-direction:row;align-items:center;gap:12px;justify-content:space-between;">
-            <div>
-              <div class="cell-btn-name" style="font-size:14px;">${label}</div>
-              <div class="cell-btn-tag" style="margin-top:3px;">${tag}</div>
-            </div>
-            <div class="cell-btn-count" id="cnt-micronucleo" style="font-size:32px;padding:0;">${state.cells.micronucleo}</div>
-          </div>
-          <button class="cell-btn-minus" onclick="removeCellBtn(event,'micronucleo')" style="border-top:1px solid var(--border);min-height:36px;">−</button>
-          <div class="mn-extra-row" onclick="event.stopPropagation()">
-            <span class="mn-extra-label">＋ ${mnExtraLbl}</span>
-            <span class="mn-extra-val" id="mnExtraVal">${state.mnExtra||0}</span>
-            <button class="mn-extra-btn" onclick="addMNExtra()">＋</button>
-            <button class="mn-extra-btn" onclick="removeMNExtra()">−</button>
-          </div>
-          <div class="mn-total-row" onclick="event.stopPropagation()">
-            ${mnTotalLbl}: <span>${totalMN}</span>&nbsp;·&nbsp;
-            ${state.cells.micronucleo} ${mnCellsLbl} + ${state.mnExtra||0} extra
-          </div>
-        </div>
-      </div>`;
-    }
-
-    // Standard card grid
     const grid = sec.keys.map(key => {
       const d = CELL_DEFS.find(x => x.key===key);
       const label = lang==='es' ? d.labelEs : d.labelEn;
