@@ -491,6 +491,50 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 .toast.error{border-color:var(--red);color:var(--red);}
 .toast.success{border-color:var(--green);color:var(--green);}
 
+/* ── KEYBOARD BADGE ── */
+.kbd-badge{
+  position:absolute;top:5px;right:6px;
+  min-width:17px;height:17px;padding:0 3px;
+  background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.13);
+  border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.38);display:flex;align-items:center;justify-content:center;
+  line-height:1;pointer-events:none;user-select:none;
+}
+.kbd-badge-left{left:6px;right:auto;}
+.mn-kbd-badge{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:16px;height:16px;padding:0 3px;flex-shrink:0;
+  background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.13);
+  border-radius:4px;font-family:var(--mono);font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.38);line-height:1;
+}
+
+/* ── EXPORT FORMAT MODAL ── */
+.export-options{display:flex;flex-direction:column;gap:10px;margin-top:4px;}
+.export-fmt-btn{
+  display:flex;align-items:center;gap:14px;
+  padding:14px 16px;border-radius:12px;
+  border:1px solid var(--border);background:var(--surface2);
+  color:var(--text);font-family:var(--sans);font-size:15px;font-weight:600;
+  cursor:pointer;touch-action:manipulation;transition:all .15s;text-align:left;
+  width:100%;
+}
+.export-fmt-btn:active{border-color:var(--accent);color:var(--accent);}
+.export-fmt-btn.csv{border-color:rgba(16,185,129,.35);}
+.export-fmt-btn.csv:active{border-color:var(--green);color:var(--green);}
+.export-fmt-btn.xlsx{border-color:rgba(124,58,237,.35);}
+.export-fmt-btn.xlsx:active{border-color:var(--accent2);color:var(--accent2);}
+.export-fmt-icon{font-size:24px;flex-shrink:0;}
+.export-fmt-info{flex:1;}
+.export-fmt-name{font-size:14px;font-weight:700;}
+.export-fmt-desc{font-size:11px;color:var(--muted);margin-top:2px;}
+.export-cancel-btn{
+  width:100%;padding:13px;border-radius:12px;border:1px solid var(--border);
+  background:transparent;color:var(--muted);font-family:var(--sans);
+  font-size:14px;cursor:pointer;margin-top:4px;
+}
+.export-cancel-btn:active{color:var(--text);}
+
 /* ── SCROLLBAR ── */
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
@@ -644,7 +688,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
       <tbody id="reportBody"></tbody>
     </table>
     <div class="report-footer" id="reportFooter"></div>
-    <button class="report-export-btn" onclick="exportCSV()">⬇️ <span id="lbl-exportBtn">Guardar CSV</span></button>
+    <button class="report-export-btn" onclick="openExportModal()">⬇️ <span id="lbl-exportBtn">Exportar reporte</span></button>
   </div>
 </div>
 
@@ -657,9 +701,36 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
     <div class="done-title" id="doneTitle">¡META ALCANZADA!</div>
     <div class="done-sub" id="doneSub">Has contado 2000 células.<br>Guarda tu sesión para registrar los resultados.</div>
     <div class="done-actions">
-      <button class="done-export" onclick="exportCSV();closeDone()">⬇️ <span id="lbl-doneExport">Guardar CSV</span></button>
+      <button class="done-export" onclick="closeDone();openExportModal()">⬇️ <span id="lbl-doneExport">Exportar reporte</span></button>
       <button class="done-report" onclick="closeDone();openReport()">📊 <span id="lbl-doneReport">Ver reporte completo</span></button>
       <button class="done-continue" onclick="closeDone()" id="lbl-doneContinue">Seguir contando</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════
+     EXPORT FORMAT MODAL
+══════════════════════ -->
+<div class="modal-overlay" id="exportModal">
+  <div class="modal-sheet">
+    <div class="modal-pill"></div>
+    <div class="modal-title" id="exportModalTitle">⬇️ EXPORTAR REPORTE</div>
+    <div class="export-options">
+      <button class="export-fmt-btn csv" onclick="doExport('csv')">
+        <span class="export-fmt-icon">📄</span>
+        <span class="export-fmt-info">
+          <div class="export-fmt-name">CSV</div>
+          <div class="export-fmt-desc" id="exportDescCSV">Comma Separated Values · Universal</div>
+        </span>
+      </button>
+      <button class="export-fmt-btn xlsx" onclick="doExport('xlsx')">
+        <span class="export-fmt-icon">📊</span>
+        <span class="export-fmt-info">
+          <div class="export-fmt-name">Excel (XLSX)</div>
+          <div class="export-fmt-desc" id="exportDescXLSX">Hoja de cálculo con formato</div>
+        </span>
+      </button>
+      <button class="export-cancel-btn" id="exportCancelBtn" onclick="closeExportModal()">Cancelar</button>
     </div>
   </div>
 </div>
@@ -817,10 +888,14 @@ const UI = {
     thCat:'Categoría', thType:'Tipo', thCount:'N', thPer:'/1000',
     rTotal:'Total', rMNF:'Frec. MN', rNBUDF:'Frec. NBUD', rDeath:'Muerte celular',
     rDate:'Fecha', rProto:'Protocolo',
-    exportBtn:'Guardar CSV',
+    exportBtn:'Exportar reporte',
+    exportTitle:'⬇️ EXPORTAR REPORTE',
+    exportDescCSV:'Comma Separated Values · Universal',
+    exportDescXLSX:'Hoja de cálculo con formato',
+    exportCancel:'Cancelar',
     doneTitle:'¡META ALCANZADA!',
     doneSub:'Has contado 2000 células.<br>Guarda tu sesión para registrar los resultados.',
-    doneExport:'Guardar CSV', doneReport:'Ver reporte completo', doneContinue:'Seguir contando',
+    doneExport:'Exportar reporte', doneReport:'Ver reporte completo', doneContinue:'Seguir contando',
     notifUndo:'↩ Deshecho: ', notifNoUndo:'Sin acciones para deshacer',
     notifReset:'Conteo reiniciado', notifExport:'Sesión guardada ✓',
     notifGoal:'¡Meta de 2000 alcanzada!',
@@ -844,10 +919,14 @@ const UI = {
     thCat:'Category', thType:'Type', thCount:'N', thPer:'/1000',
     rTotal:'Total', rMNF:'MN freq.', rNBUDF:'NBUD freq.', rDeath:'Cell death',
     rDate:'Date', rProto:'Protocol',
-    exportBtn:'Save CSV',
+    exportBtn:'Export report',
+    exportTitle:'⬇️ EXPORT REPORT',
+    exportDescCSV:'Comma Separated Values · Universal',
+    exportDescXLSX:'Formatted spreadsheet',
+    exportCancel:'Cancel',
     doneTitle:'GOAL REACHED!',
     doneSub:'You\'ve counted 2000 cells.<br>Save your session to record the results.',
-    doneExport:'Save CSV', doneReport:'View full report', doneContinue:'Keep counting',
+    doneExport:'Export report', doneReport:'View full report', doneContinue:'Keep counting',
     notifUndo:'↩ Undone: ', notifNoUndo:'Nothing to undo',
     notifReset:'Count reset', notifExport:'Session saved ✓',
     notifGoal:'Goal of 2000 reached!',
@@ -1058,19 +1137,22 @@ function renderPane(pane) {
     const d = CELL_DEFS.find(x => x.key===key);
     const label = lang==='es' ? d.labelEs : d.labelEn;
     const tag   = lang==='es' ? d.tagEs   : d.tagEn;
+    const kbdNum = CELL_DEFS.findIndex(x => x.key===key) + 1;
     if (key==='micronucleo') {
       const mnExtraLbl = lang==='es' ? 'MN extra' : 'Extra MN';
       const mnCellsLbl = lang==='es' ? 'cél.' : 'cells';
       const totalMN = state.cells.micronucleo + (state.mnExtra||0);
       return `
       <div class="cell-btn" style="--cc:${d.color}" data-key="micronucleo" ontouchstart="" onclick="addCellBtn(event,'micronucleo')">
+        <span class="kbd-badge kbd-badge-left">${kbdNum}</span>
         <div class="cell-btn-body" style="flex-direction:row;align-items:center;gap:8px;justify-content:space-between;">
-          <div><div class="cell-btn-name">${label}</div><div class="cell-btn-tag">${tag}</div></div>
+          <div style="padding-left:20px"><div class="cell-btn-name">${label}</div><div class="cell-btn-tag">${tag}</div></div>
           <div class="cell-btn-count" id="cnt-micronucleo" style="font-size:26px;padding:0;">${state.cells.micronucleo}</div>
         </div>
         <button class="cell-btn-minus" onclick="removeCellBtn(event,'micronucleo')">−</button>
         <div class="mn-extra-row" onclick="event.stopPropagation()">
           <span class="mn-extra-label">${mnExtraLbl}</span>
+          <span class="mn-kbd-badge">Q</span>
           <span class="mn-extra-val" id="mnExtraVal">${state.mnExtra||0}</span>
           <button class="mn-extra-btn" onclick="addMNExtra()">＋</button>
           <button class="mn-extra-btn" onclick="removeMNExtra()">−</button>
@@ -1082,6 +1164,7 @@ function renderPane(pane) {
     }
     return `
     <div class="cell-btn" style="--cc:${d.color}" data-key="${key}" ontouchstart="" onclick="addCellBtn(event,'${key}')">
+      <span class="kbd-badge">${kbdNum}</span>
       <div class="cell-btn-body">
         <div class="cell-btn-name">${label}</div>
         <div class="cell-btn-tag">${tag}</div>
@@ -1108,8 +1191,10 @@ function renderCounter() {
       const d = CELL_DEFS.find(x => x.key===key);
       const label = lang==='es' ? d.labelEs : d.labelEn;
       const tag   = lang==='es' ? d.tagEs   : d.tagEn;
+      const kbdNum = CELL_DEFS.findIndex(x => x.key===key) + 1;
       return `
       <div class="cell-btn" style="--cc:${d.color}" data-key="${key}" ontouchstart="" onclick="addCellBtn(event,'${key}')">
+        <span class="kbd-badge">${kbdNum}</span>
         <div class="cell-btn-body">
           <div class="cell-btn-name">${label}</div>
           <div class="cell-btn-tag">${tag}</div>
@@ -1533,10 +1618,89 @@ function exportCSV() {
 }
 
 // ═══════════════════════════════════════
+// EXPORT FORMAT MODAL
+// ═══════════════════════════════════════
+function openExportModal() {
+  const u = UI[lang];
+  g('exportModalTitle').textContent  = u.exportTitle;
+  g('exportDescCSV').textContent     = u.exportDescCSV;
+  g('exportDescXLSX').textContent    = u.exportDescXLSX;
+  g('exportCancelBtn').textContent   = u.exportCancel;
+  g('exportModal').classList.add('open');
+}
+
+function closeExportModal() {
+  g('exportModal').classList.remove('open');
+}
+
+function doExport(format) {
+  closeExportModal();
+  if (format === 'xlsx') exportXLSX();
+  else exportCSV();
+}
+
+function exportXLSX() {
+  if (typeof XLSX === 'undefined') {
+    showToast(lang==='es'?'SheetJS no disponible, usando CSV':'SheetJS unavailable, using CSV','error');
+    exportCSV(); return;
+  }
+  const total  = getTotal();
+  const now    = new Date();
+  const mnCells = state.cells.micronucleo;
+  const mnExtra = state.mnExtra || 0;
+  const totalMN = mnCells + mnExtra;
+  const diff    = state.cells.diferenciada + mnCells + state.cells.nbud + state.cells.binucleada;
+  const mncf = diff>0?(mnCells/diff*1000).toFixed(2):'N/A';
+  const mnf  = diff>0?(totalMN/diff*1000).toFixed(2):'N/A';
+  const nF   = diff>0?(state.cells.nbud/diff*1000).toFixed(2):'N/A';
+  const death= state.cells.cromatina+state.cells.cariorrexis+state.cells.picnosis+state.cells.cariolisis;
+
+  const header = lang==='es'
+    ? ['Clave','Célula','Categoría','N','%','/1000']
+    : ['Key','Cell type','Category','N','%','/1000'];
+
+  const rows = [
+    [lang==='es'?'Participante':'Participant', state.participantId],
+    [lang==='es'?'Muestra':'Sample',           state.sampleNumber||''],
+    [lang==='es'?'Fecha':'Date',               now.toLocaleString(lang==='es'?'es-MX':'en-US')],
+    ['Protocolo','HUMNxl — Bolognesi et al. 2013'],
+    [],
+    header,
+    ...CELL_DEFS.map(d => {
+      const label = lang==='es' ? d.labelEs : d.labelEn;
+      const cat   = lang==='es' ? d.catEs   : d.catEn;
+      const pct = total>0 ? parseFloat((state.cells[d.key]/total*100).toFixed(2)) : 0;
+      const p1k = total>0 ? parseFloat((state.cells[d.key]/total*1000).toFixed(2)) : 0;
+      return [d.key, label, cat, state.cells[d.key], pct, p1k];
+    }),
+    [],
+    [lang==='es'?'Total':'Total', '', '', total],
+    ['MN células/cells', '', '', mnCells],
+    ['MN extra', '', '', mnExtra],
+    ['MN total', '', '', totalMN],
+    ['MNCF/1000', '', '', mncf],
+    ['MNF/1000', '', '', mnf],
+    [`${lang==='es'?'Frec. NBUD':'NBUD freq.'}/1000`, '', '', nF],
+    [lang==='es'?'Muerte celular':'Cell death', '', '', death],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols'] = [{wch:20},{wch:24},{wch:14},{wch:8},{wch:8},{wch:8}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'BMCyt');
+  const ds  = now.toISOString().replace(/[:.]/g,'-').slice(0,16);
+  const pid = state.participantId.replace(/[^a-zA-Z0-9_-]/g,'_');
+  XLSX.writeFile(wb, `BMCyt_${pid}_${ds}.xlsx`);
+  showToast(UI[lang].notifExport, 'success');
+}
+
+g('exportModal').addEventListener('click', e => { if(e.target===g('exportModal')) closeExportModal(); });
+
+// ═══════════════════════════════════════
 // KEYBOARD SHORTCUTS (desktop / BT keyboards)
 // ═══════════════════════════════════════
-const KEY_MAP={n:'diferenciada',b:'basal',m:'micronucleo',g:'nbud',
-               i:'binucleada',c:'cromatina',r:'cariorrexis',p:'picnosis',l:'cariolisis'};
+const KEY_MAP={'1':'diferenciada','2':'basal','3':'micronucleo','4':'nbud',
+               '5':'binucleada','6':'cromatina','7':'cariorrexis','8':'picnosis','9':'cariolisis'};
 
 document.addEventListener('keydown', e => {
   if (!g('scCounter').classList.contains('active')) return;
@@ -1545,6 +1709,7 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey||e.metaKey||e.altKey) return;
   const k = e.key.toLowerCase();
   if (KEY_MAP[k]){ addCell(KEY_MAP[k]); return; }
+  if (k==='q'){ addMNExtra(); return; }
   if (k==='z') undoLast();
 });
 
@@ -1568,5 +1733,6 @@ function init() {
 
 init();
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
