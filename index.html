@@ -96,6 +96,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   font-size:14px;cursor:pointer;transition:all .15s;
 }
 .btn-new:active{color:var(--red);border-color:var(--red);}
+.btn-import{
+  padding:14px;border-radius:12px;border:none;
+  background:linear-gradient(135deg,var(--green),#059669);
+  color:#fff;font-family:var(--sans);font-size:15px;font-weight:700;
+  cursor:pointer;transition:opacity .15s;width:100%;
+}
+.btn-import:active{opacity:.8;}
 
 /* ══════════════════════════════════════
    COUNTER SCREEN
@@ -130,7 +137,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 
 /* progress */
 .progress-wrap{padding:8px 16px 10px;}
-.progress-track{height:6px;background:var(--surface2);border-radius:99px;overflow:hidden;}
+.progress-track{height:8px;background:var(--surface2);border-radius:99px;overflow:hidden;}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));
   border-radius:99px;transition:width .35s ease;width:0%;}
 .milestones{display:flex;gap:4px;margin-top:5px;}
@@ -148,7 +155,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 
 /* ── SECTION LABEL ── */
 .section-lbl{
-  font-size:9px;text-transform:uppercase;letter-spacing:2px;
+  font-size:10px;text-transform:uppercase;letter-spacing:2px;
   color:var(--muted);font-family:var(--mono);
   padding:4px 2px 6px;margin-top:10px;
   border-bottom:1px solid var(--border);margin-bottom:8px;
@@ -185,15 +192,15 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 }
 
 /* Wide card (cols-2) */
-.cols-2 .cell-btn{min-height:90px;}
+.cols-2 .cell-btn{min-height:120px;}
 .cols-2 .cell-btn-body{
-  flex:1;display:flex;flex-direction:column;
+  flex:1;display:flex;flex-direction:row;
   justify-content:space-between;padding:10px 12px 6px;
 }
-.cols-2 .cell-btn-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3;}
+.cols-2 .cell-btn-name{font-size:10px;font-weight:700;color:var(--text);line-height:1.3;}
 .cols-2 .cell-btn-tag{font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
 .cols-2 .cell-btn-count{
-  font-family:var(--mono);font-size:40px;font-weight:700;
+  font-family:var(--mono);font-size:20px;font-weight:700;
   color:var(--cc);line-height:1;margin:4px 0 8px;
 }
 .cols-2 .cell-btn-minus{
@@ -232,27 +239,25 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 /* cols-1 (MN card) minus button */
 .cols-1 .cell-btn-minus{
   border-top:1px solid var(--border);
-  padding:8px;text-align:center;
-  font-size:18px;color:var(--muted);font-family:var(--mono);
+  padding:6px;text-align:center;
+  font-size:15px;color:var(--muted);font-family:var(--mono);
   background:transparent;border:none;border-top:1px solid var(--border);
   cursor:pointer;touch-action:manipulation;width:100%;
   min-height:36px;display:flex;align-items:center;justify-content:center;
 }
 .cols-1 .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 
-/* ── TWO-PANE LAYOUT (Genomic | Cell Death) ── */
-.two-pane{display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;}
+/* ── TWO/THREE-PANE LAYOUT ── */
+.two-pane,.three-pane{display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;}
 .pane{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
 .pane .cell-btn{min-height:72px;}
 .pane .cell-btn-body{
   flex:1;display:flex;flex-direction:column;
   justify-content:space-between;padding:9px 10px 5px;
 }
-.pane .cell-btn-name{font-size:11px;font-weight:700;color:var(--text);line-height:1.3;}
-.pane .cell-btn-tag{font-size:7px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
-.pane .cell-btn-count{
-  font-family:var(--mono);font-size:30px;font-weight:700;
-  color:var(--cc);line-height:1;margin:4px 0 4px;
+.pane .cell-btn-name{font-size:15px;font-weight:700;color:var(--text);line-height:1.3;}
+.pane .cell-btn-tag{font-size:5px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.3px;}
+.pane .cell-btn-count{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--cc);line-height:1;margin:4px 0 4px;
 }
 .pane .cell-btn-minus{
   border-top:1px solid var(--border);padding:5px;text-align:center;
@@ -262,8 +267,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 }
 .pane .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 .pane .mn-extra-row{padding:6px 8px;gap:4px;}
-.pane .mn-extra-label{font-size:8px;}
-.pane .mn-extra-val{font-size:16px;min-width:30px;}
+.pane .mn-extra-label{font-size:12px;}
+.pane .mn-extra-val{font-size:12px;min-width:30px;}
 .pane .mn-extra-btn{width:26px;height:36px;font-size:20px;}
 .pane .mn-total-row{padding:3px 8px 7px;font-size:8px;gap:6px;}
 .pane [data-key="micronucleo"]{flex:4;}
@@ -273,7 +278,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   border-top:1px solid var(--border);
   background:rgba(245,158,11,.05);
   display:flex;align-items:center;gap:8px;
-  padding:9px 14px;
+  padding:8px 12px;
   /* stop the card's tap-to-add from firing */
   position:relative;z-index:2;
 }
@@ -286,8 +291,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   color:#f59e0b;min-width:32px;text-align:center;
 }
 .mn-extra-btn{
-  width:36px;height:36px;border:1px solid var(--border);border-radius:8px;
-  background:transparent;color:var(--muted);font-size:20px;
+  min-width:44px;border:1px solid var(--border);border-radius:8px;
+  background:transparent;color:var(--muted);font-size:16px;
+  padding:10px 14px;
   cursor:pointer;touch-action:manipulation;
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   font-family:var(--mono);
@@ -540,6 +546,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 </head>
 <body>
 
@@ -553,7 +560,6 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
       <div class="setup-logo-icon">🔬</div>
       <div class="setup-logo-text">
         <h1>BMCyt Counter</h1>
-        <p>HUMNxl · Bolognesi 2013</p>
       </div>
       <div class="lang-toggle">
         <button class="lang-btn active" id="btnES" onclick="setLang('es')">ES</button>
@@ -585,6 +591,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   </div>
   </div>
 </div>
+<input type="file" id="importFileInput" accept=".csv,.xlsx" style="display:none" onchange="handleImportFile(event)">
 
 <!-- ══════════════════════
      SCREEN 2 · COUNTER
@@ -752,7 +759,6 @@ const CELL_DEFS = [
    catEs:'Normal', catEn:'Normal', catClass:'cat-normal',
    color:'#10b981',
    voiceEs:'"normal" · "dife"', voiceEn:'"normal" · "diff"',
-   tagEs:'Normal', tagEn:'Normal',
    descEs:'Núcleo oval uniforme. Citoplasma plano.',
    descEn:'Uniform oval nucleus. Flat cytoplasm.'},
 
@@ -762,7 +768,6 @@ const CELL_DEFS = [
    catEs:'Normal', catEn:'Normal', catClass:'cat-normal',
    color:'#06b6d4',
    voiceEs:'"basal"', voiceEn:'"basal"',
-   tagEs:'Proliferación', tagEn:'Proliferation',
    descEs:'Mayor relación N:C. Citoplasma oscuro.',
    descEn:'Large N:C ratio. Darker cytoplasm.'},
 
@@ -773,7 +778,6 @@ const CELL_DEFS = [
    catEs:'Genotóxica', catEn:'Genotoxic', catClass:'cat-geno',
    color:'#f59e0b',
    voiceEs:'"micro" · "mn"', voiceEn:'"micro" · "mn"',
-   tagEs:'Genotóxica', tagEn:'Genotoxic',
    descEs:'Redondo/oval 1/16–1/3 núcleo. Feulgen+.',
    descEn:'Round/oval 1/16–1/3 nucleus. Feulgen+.'},
 
@@ -783,7 +787,6 @@ const CELL_DEFS = [
    catEs:'Genotóxica', catEn:'Genotoxic', catClass:'cat-geno',
    color:'#a78bfa',
    voiceEs:'"gema" · "brote"', voiceEn:'"bud" · "nbud"',
-   tagEs:'Genotóxica', tagEn:'Genotoxic',
    descEs:'Constrición con puente nucleoplasmático.',
    descEn:'Constriction with nucleoplasmic bridge.'},
 
@@ -793,18 +796,16 @@ const CELL_DEFS = [
    catEs:'Genotóxica', catEn:'Genotoxic', catClass:'cat-geno',
    color:'#ec4899',
    voiceEs:'"bi" · "binucleada"', voiceEn:'"bi" · "binucleated"',
-   tagEs:'Genotóxica', tagEn:'Genotoxic',
    descEs:'Dos núcleos iguales. Defecto de citocinesis.',
    descEn:'Two equal nuclei. Cytokinesis defect.'},
 
   // Cytotoxic
   {key:'cromatina',
-   labelEs:'Crom. Condensada', labelEn:'Cond. Chromatin',
+   labelEs:'Cromatina Condensada', labelEn:'Condensed Chromatin',
    shortEs:'CC', shortEn:'CC',
    catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
    color:'#f97316',
    voiceEs:'"croma" · "cond"', voiceEn:'"chroma" · "cond"',
-   tagEs:'Citotóxica', tagEn:'Cytotoxic',
    descEs:'Patrón estriado paralelo.', descEn:'Parallel striated pattern.'},
 
   {key:'cariorrexis',
@@ -813,7 +814,6 @@ const CELL_DEFS = [
    catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
    color:'#ef4444',
    voiceEs:'"cario" · "rexis"', voiceEn:'"karyo" · "rexis"',
-   tagEs:'Citotóxica', tagEn:'Cytotoxic',
    descEs:'Patrón moteado denso. Fragmentación.', descEn:'Dense speckled pattern. Fragmentation.'},
 
   {key:'picnosis',
@@ -822,7 +822,6 @@ const CELL_DEFS = [
    catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
    color:'#fb923c',
    voiceEs:'"picno"', voiceEn:'"pyk" · "pyknosis"',
-   tagEs:'Citotóxica', tagEn:'Cytotoxic',
    descEs:'Núcleo contraído 1/3–2/3. Intensamente teñido.',
    descEn:'Shrunken 1/3–2/3 normal. Intensely stained.'},
 
@@ -832,19 +831,15 @@ const CELL_DEFS = [
    catEs:'Citotóxica', catEn:'Cytotoxic', catClass:'cat-cyto',
    color:'#64748b',
    voiceEs:'"lisis" · "cariolisis"', voiceEn:'"lysis" · "karyolysis"',
-   tagEs:'Citotóxica', tagEn:'Cytotoxic',
    descEs:'Sin ADN detectable. Imagen fantasma.', descEn:'No detectable DNA. Ghost-like.'},
 ];
 
 // sections: [label, cols, keys, optional flags]
 const SECTIONS = [
-  {lbl:{es:'Células Normales',en:'Normal Cells'}, cols:2, color:'#10b981',
-   keys:['diferenciada','basal']},
-  {twoPanes:true,
-   left: {lbl:{es:'Daño Genómico',en:'Genomic Damage'}, color:'#f59e0b',
-          keys:['micronucleo','nbud','binucleada']},
-   right:{lbl:{es:'Muerte Celular',en:'Cell Death'}, color:'#ef4444',
-          keys:['cromatina','cariorrexis','picnosis','cariolisis']}},
+  {threePanes:true,
+   left:  {lbl:{es:'Células Normales',en:'Normal Cells'}, color:'#10b981', keys:['diferenciada']},
+   middle:{lbl:{es:'Genotoxicidad',en:'Genotoxicity'}, color:'#f59e0b',    keys:['basal','micronucleo','nbud','binucleada']},
+   right: {lbl:{es:'Citotoxicidad',en:'Cytotoxicity'}, color:'#ef4444',    keys:['cromatina','cariorrexis','picnosis','cariolisis']}},
 ];
 
 const CMD_ES=[
@@ -901,6 +896,9 @@ const UI = {
     notifGoal:'¡Meta de 2000 alcanzada!',
     confirmReset:'¿Reiniciar el conteo? Esta acción no se puede deshacer.',
     editParticipant:'Editar participante',
+    importSession:'Importar sesión (CSV / XLSX)',
+    importSuccess:'Sesión importada ✓',
+    importInvalid:'Archivo no válido. Usa un CSV o XLSX exportado desde BMCyt.',
   },
   en:{
     pid:'Participant ID', sample:'Sample #',
@@ -932,6 +930,9 @@ const UI = {
     notifGoal:'Goal of 2000 reached!',
     confirmReset:'Reset the entire count? This cannot be undone.',
     editParticipant:'Edit participant',
+    importSession:'Import session (CSV / XLSX)',
+    importSuccess:'Session imported ✓',
+    importInvalid:'Invalid file. Use a CSV or XLSX exported from BMCyt.',
   }
 };
 
@@ -1017,12 +1018,16 @@ function renderSetupLabels() {
 function renderSetupActions(saved) {
   const u = UI[lang];
   const actions = g('setupActions');
+  const importBtn = `<button class="btn-import" onclick="openImportFile()">📂 ${u.importSession}</button>`;
   if (saved && getCountFromSaved(saved) > 0) {
     actions.innerHTML = `
       <button class="btn-resume" onclick="resumeSession()">${u.resumeSession}</button>
-      <button class="btn-start"  onclick="startNewSession()">${u.startNew}</button>`;
+      <button class="btn-start"  onclick="startNewSession()">${u.startNew}</button>
+      ${importBtn}`;
   } else {
-    actions.innerHTML = `<button class="btn-start" onclick="startNewSession()">${u.startNew}</button>`;
+    actions.innerHTML = `
+      <button class="btn-start" onclick="startNewSession()">${u.startNew}</button>
+      ${importBtn}`;
   }
 }
 
@@ -1136,23 +1141,22 @@ function renderPane(pane) {
   const cards = pane.keys.map(key => {
     const d = CELL_DEFS.find(x => x.key===key);
     const label = lang==='es' ? d.labelEs : d.labelEn;
-    const tag   = lang==='es' ? d.tagEs   : d.tagEn;
-    const kbdNum = CELL_DEFS.findIndex(x => x.key===key) + 1;
+    const kbdKey = CELL_TO_KEY[key] || '?';
     if (key==='micronucleo') {
       const mnExtraLbl = lang==='es' ? 'MN extra' : 'Extra MN';
       const mnCellsLbl = lang==='es' ? 'cél.' : 'cells';
       const totalMN = state.cells.micronucleo + (state.mnExtra||0);
       return `
       <div class="cell-btn" style="--cc:${d.color}" data-key="micronucleo" ontouchstart="" onclick="addCellBtn(event,'micronucleo')">
-        <span class="kbd-badge kbd-badge-left">${kbdNum}</span>
+        <span class="kbd-badge kbd-badge-left">${kbdKey}</span>
         <div class="cell-btn-body" style="flex-direction:row;align-items:center;gap:8px;justify-content:space-between;">
-          <div style="padding-left:20px"><div class="cell-btn-name">${label}</div><div class="cell-btn-tag">${tag}</div></div>
+          <div style="padding-left:20px"><div class="cell-btn-name">${label}</div></div>
           <div class="cell-btn-count" id="cnt-micronucleo" style="font-size:26px;padding:0;">${state.cells.micronucleo}</div>
         </div>
         <button class="cell-btn-minus" onclick="removeCellBtn(event,'micronucleo')">−</button>
         <div class="mn-extra-row" onclick="event.stopPropagation()">
           <span class="mn-extra-label">${mnExtraLbl}</span>
-          <span class="mn-kbd-badge">Q</span>
+          <span class="mn-kbd-badge">${CELL_TO_KEY['__mnExtra']}</span>
           <span class="mn-extra-val" id="mnExtraVal">${state.mnExtra||0}</span>
           <button class="mn-extra-btn" onclick="addMNExtra()">＋</button>
           <button class="mn-extra-btn" onclick="removeMNExtra()">−</button>
@@ -1164,10 +1168,9 @@ function renderPane(pane) {
     }
     return `
     <div class="cell-btn" style="--cc:${d.color}" data-key="${key}" ontouchstart="" onclick="addCellBtn(event,'${key}')">
-      <span class="kbd-badge">${kbdNum}</span>
+      <span class="kbd-badge">${kbdKey}</span>
       <div class="cell-btn-body">
         <div class="cell-btn-name">${label}</div>
-        <div class="cell-btn-tag">${tag}</div>
         <div class="cell-btn-count" id="cnt-${key}">${state.cells[key]}</div>
       </div>
       <button class="cell-btn-minus" onclick="removeCellBtn(event,'${key}')">−</button>
@@ -1179,6 +1182,9 @@ function renderPane(pane) {
 function renderCounter() {
   const scroll = g('cellsScroll');
   scroll.innerHTML = SECTIONS.map(sec => {
+    if (sec.threePanes) {
+      return `<div class="three-pane">${renderPane(sec.left)}${renderPane(sec.middle)}${renderPane(sec.right)}</div>`;
+    }
     if (sec.twoPanes) {
       return `<div class="two-pane">${renderPane(sec.left)}${renderPane(sec.right)}</div>`;
     }
@@ -1190,14 +1196,12 @@ function renderCounter() {
     const grid = sec.keys.map(key => {
       const d = CELL_DEFS.find(x => x.key===key);
       const label = lang==='es' ? d.labelEs : d.labelEn;
-      const tag   = lang==='es' ? d.tagEs   : d.tagEn;
-      const kbdNum = CELL_DEFS.findIndex(x => x.key===key) + 1;
+      const kbdKey = CELL_TO_KEY[key] || '?';
       return `
       <div class="cell-btn" style="--cc:${d.color}" data-key="${key}" ontouchstart="" onclick="addCellBtn(event,'${key}')">
-        <span class="kbd-badge">${kbdNum}</span>
+        <span class="kbd-badge">${kbdKey}</span>
         <div class="cell-btn-body">
           <div class="cell-btn-name">${label}</div>
-          <div class="cell-btn-tag">${tag}</div>
           <div class="cell-btn-count" id="cnt-${key}">${state.cells[key]}</div>
         </div>
         <button class="cell-btn-minus" onclick="removeCellBtn(event,'${key}')">−</button>
@@ -1697,10 +1701,112 @@ function exportXLSX() {
 g('exportModal').addEventListener('click', e => { if(e.target===g('exportModal')) closeExportModal(); });
 
 // ═══════════════════════════════════════
+// SESSION IMPORT (CSV / XLSX)
+// ═══════════════════════════════════════
+function openImportFile() {
+  g('importFileInput').value = '';
+  g('importFileInput').click();
+}
+
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const name = file.name.toLowerCase();
+  if (name.endsWith('.xlsx')) {
+    if (typeof XLSX === 'undefined') {
+      showToast(lang==='es'?'SheetJS no disponible, usa CSV':'SheetJS unavailable, use CSV','error');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try { parseImportedXLSX(ev.target.result); }
+      catch(_) { showToast(UI[lang].importInvalid,'error'); }
+    };
+    reader.readAsArrayBuffer(file);
+  } else if (name.endsWith('.csv')) {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try { parseImportedCSV(ev.target.result); }
+      catch(_) { showToast(UI[lang].importInvalid,'error'); }
+    };
+    reader.readAsText(file,'utf-8');
+  } else {
+    showToast(UI[lang].importInvalid,'error');
+  }
+}
+
+function applyImportedSession(imported) {
+  const hasData = CELL_DEFS.some(d => (imported.cells[d.key]||0) > 0);
+  if (!hasData) { showToast(UI[lang].importInvalid,'error'); return; }
+  if (imported.lang) lang = imported.lang;
+  state.participantId = imported.participantId || '';
+  state.sampleNumber  = imported.sampleNumber  || '';
+  state.cells = {};
+  CELL_DEFS.forEach(d => state.cells[d.key] = imported.cells[d.key] || 0);
+  state.mnExtra   = imported.mnExtra   || 0;
+  state.history   = [];
+  state.goalShown = false;
+  state.startTime = new Date().toISOString();
+  g('inpParticipant').value = state.participantId;
+  g('inpSample').value      = state.sampleNumber;
+  saveState();
+  showToast(UI[lang].importSuccess,'success');
+  setTimeout(() => launchCounter(), 500);
+}
+
+function parseImportedCSV(text) {
+  const lines = text.split(/\r?\n/);
+  const imported = { participantId:'', sampleNumber:'', cells:{}, mnExtra:0, lang:null };
+  CELL_DEFS.forEach(d => imported.cells[d.key] = 0);
+  let inData = false;
+  for (const raw of lines) {
+    const line = raw.trim();
+    if (!line) continue;
+    if (line.startsWith('#Participant,')) { imported.participantId = line.slice(13); continue; }
+    if (line.startsWith('#Sample,'))      { imported.sampleNumber  = line.slice(8);  continue; }
+    if (line.startsWith('#Lang,'))        { imported.lang          = line.slice(6);  continue; }
+    if (line.startsWith('#MN_EXTRA,'))    { imported.mnExtra = parseInt(line.slice(10))||0; continue; }
+    if (line.startsWith('#')) continue;
+    if (line.startsWith('key,')) { inData = true; continue; }
+    if (!inData) continue;
+    const cols = line.split(',');
+    const key = cols[0];
+    if (CELL_DEFS.find(d => d.key===key)) imported.cells[key] = parseInt(cols[5])||0;
+  }
+  applyImportedSession(imported);
+}
+
+function parseImportedXLSX(buffer) {
+  const wb   = XLSX.read(buffer, {type:'array'});
+  const ws   = wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:''});
+  const imported = { participantId:'', sampleNumber:'', cells:{}, mnExtra:0, lang:null };
+  CELL_DEFS.forEach(d => imported.cells[d.key] = 0);
+  for (const row of rows) {
+    const c0 = String(row[0]||'').trim();
+    const c1 = String(row[1]||'').trim();
+    const c3 = row[3];
+    if (c0==='Participante'||c0==='Participant') { imported.participantId = c1; continue; }
+    if (c0==='Muestra'||c0==='Sample')           { imported.sampleNumber  = c1; continue; }
+    if (CELL_DEFS.find(d => d.key===c0))         { imported.cells[c0] = parseInt(c3)||0; continue; }
+    if (c0==='MN extra')                         { imported.mnExtra = parseInt(c3)||0; continue; }
+  }
+  applyImportedSession(imported);
+}
+
+// ═══════════════════════════════════════
 // KEYBOARD SHORTCUTS (desktop / BT keyboards)
 // ═══════════════════════════════════════
-const KEY_MAP={'1':'diferenciada','2':'basal','3':'micronucleo','4':'nbud',
-               '5':'binucleada','6':'cromatina','7':'cariorrexis','8':'picnosis','9':'cariolisis'};
+const KEY_MAP={' ':'diferenciada','a':'basal','s':'micronucleo','d':'nbud',
+               'f':'binucleada','j':'cromatina','k':'cariorrexis','l':'picnosis','ñ':'cariolisis'};
+
+// Reverse mapping for display
+const CELL_TO_KEY = Object.entries(KEY_MAP).reduce((acc, [k, v]) => {
+  const displayKey = k === ' ' ? 'SPACE' : k.toUpperCase();
+  acc[v] = displayKey;
+  return acc;
+}, {});
+CELL_TO_KEY['__mnExtra'] = 'Q';
 
 document.addEventListener('keydown', e => {
   if (!g('scCounter').classList.contains('active')) return;
@@ -1733,6 +1839,5 @@ function init() {
 
 init();
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
 </html>
