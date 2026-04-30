@@ -836,10 +836,12 @@ const CELL_DEFS = [
 
 // sections: [label, cols, keys, optional flags]
 const SECTIONS = [
-  {threePanes:true,
-   left:  {lbl:{es:'Células Normales',en:'Normal Cells'}, color:'#10b981', keys:['diferenciada']},
-   middle:{lbl:{es:'Genotoxicidad',en:'Genotoxicity'}, color:'#f59e0b',    keys:['basal','micronucleo','nbud','binucleada']},
-   right: {lbl:{es:'Citotoxicidad',en:'Cytotoxicity'}, color:'#ef4444',    keys:['cromatina','cariorrexis','picnosis','cariolisis']}},
+  {twoPanes:true,
+   left:  {lbl:{es:'Genotoxicidad',en:'Genotoxicity'}, color:'#f59e0b', keys:['basal','micronucleo','nbud','binucleada']},
+   right: {stack:[
+     {lbl:{es:'Células Normales',en:'Normal Cells'}, color:'#10b981', keys:['diferenciada']},
+     {lbl:{es:'Citotoxicidad',en:'Cytotoxicity'}, color:'#ef4444',    keys:['cromatina','cariorrexis','picnosis','cariolisis']}
+   ]}},
 ];
 
 const CMD_ES=[
@@ -1186,7 +1188,10 @@ function renderCounter() {
       return `<div class="three-pane">${renderPane(sec.left)}${renderPane(sec.middle)}${renderPane(sec.right)}</div>`;
     }
     if (sec.twoPanes) {
-      return `<div class="two-pane">${renderPane(sec.left)}${renderPane(sec.right)}</div>`;
+      const rightHtml = sec.right.stack
+        ? `<div style="flex:1;display:flex;flex-direction:column;gap:8px;">${sec.right.stack.map(s=>renderPane(s)).join('')}</div>`
+        : renderPane(sec.right);
+      return `<div class="two-pane">${renderPane(sec.left)}${rightHtml}</div>`;
     }
     const labelHtml = sec.lbl
       ? `<div class="section-lbl" style="--section-color:${sec.color}">
