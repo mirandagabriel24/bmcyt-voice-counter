@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -545,6 +545,73 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 ::-webkit-scrollbar{width:3px;}
 ::-webkit-scrollbar-track{background:transparent;}
 ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px;}
+
+/* ══════════════════════════════════════
+   ACCESIBILIDAD — FOCO VISIBLE (teclado)
+══════════════════════════════════════ */
+/* Oculta el outline por defecto para mouse/touch,
+   pero lo restaura para teclado via :focus-visible */
+:focus { outline: none; }
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0,212,255,.18);
+  border-radius: 4px;
+}
+input:focus-visible {
+  /* Los inputs ya tienen su propio estilo de foco con border+shadow */
+  outline: none;
+  box-shadow: none;
+}
+
+/* ══════════════════════════════════════
+   ACCESIBILIDAD — MOVIMIENTO REDUCIDO
+══════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ══════════════════════════════════════
+   LEGIBILIDAD — TAMAÑOS MÍNIMOS DE FUENTE
+   (contexto de laboratorio: luz variable,
+    distancia de lectura, guantes, estrés)
+══════════════════════════════════════ */
+/* Milestone labels: 8px → 10px */
+.ms { font-size: 10px; }
+/* Top bar stat label: 9px → 11px */
+.top-stat-lbl { font-size: 11px; }
+/* Bottom bar button label: 9px → 10px */
+.bar-btn-label { font-size: 10px; }
+/* Pane card tag (era 5px — ilegible): → 9px */
+.pane .cell-btn-tag { font-size: 9px; }
+/* cols-3 card tag: 7px → 9px */
+.cols-3 .cell-btn-tag { font-size: 9px; }
+/* cols-2 card tag: 8px → 9px */
+.cols-2 .cell-btn-tag { font-size: 9px; }
+/* Category badge en reporte: 8px → 10px */
+.cat-badge { font-size: 10px; }
+/* Report table header: 9px → 10px */
+.report-table th { font-size: 10px; }
+
+/* ══════════════════════════════════════
+   LEGIBILIDAD — CONTRASTE KBD BADGE
+   rgba(255,255,255,.38) ≈ 2.5:1 → falla WCAG AA
+   .55 ≈ 4:1 — pasa para texto pequeño en contexto UI
+══════════════════════════════════════ */
+.kbd-badge, .mn-kbd-badge {
+  color: rgba(255,255,255,.58);
+  border-color: rgba(255,255,255,.22);
+}
+
+/* ══════════════════════════════════════
+   TOUCH TARGET — PANE MINUS BUTTON
+   min-height:30px → 44px (mínimo HIG)
+══════════════════════════════════════ */
+.pane .cell-btn-minus { min-height: 44px; }
 </style>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
 </head>
@@ -557,7 +624,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   <div id="setupScroll" style="flex:1;overflow-y:auto;display:flex;align-items:center;justify-content:center;padding:24px 20px;">
   <div class="setup-card">
     <div class="setup-logo">
-      <div class="setup-logo-icon">🔬</div>
+      <div class="setup-logo-icon" aria-hidden="true">🔬</div>
       <div class="setup-logo-text">
         <h1>BMCyt Counter</h1>
       </div>
@@ -603,7 +670,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
     <div class="top-bar-inner">
       <div class="top-row">
         <div class="top-logo">
-          <div class="top-logo-icon">🔬</div>
+          <div class="top-logo-icon" aria-hidden="true">🔬</div>
           <span class="top-logo-label">BMCYT</span>
         </div>
         <button class="top-participant" id="topParticipant" onclick="openEditParticipant()">—</button>
@@ -635,20 +702,20 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 
   <!-- BOTTOM BAR -->
   <div class="bottom-bar">
-    <button class="bar-btn" onclick="undoLast()">
-      <span class="bar-btn-icon">↩</span>
+    <button class="bar-btn" onclick="undoLast()" aria-label="Deshacer último conteo" id="barBtnUndo">
+      <span class="bar-btn-icon" aria-hidden="true">↩</span>
       <span class="bar-btn-label" id="lbl-undo">Deshacer</span>
     </button>
-    <button class="bar-btn primary" onclick="openVoice()">
-      <span class="bar-btn-icon">🔬</span>
+    <button class="bar-btn primary" onclick="openVoice()" aria-label="Abrir panel de conteo por voz" id="barBtnVoice">
+      <span class="bar-btn-icon" aria-hidden="true">🔬</span>
       <span class="bar-btn-label" id="lbl-voice">Conteo</span>
     </button>
-    <button class="bar-btn" onclick="openReport()">
-      <span class="bar-btn-icon">📊</span>
+    <button class="bar-btn" onclick="openReport()" aria-label="Ver reporte de resultados" id="barBtnReport">
+      <span class="bar-btn-icon" aria-hidden="true">📊</span>
       <span class="bar-btn-label" id="lbl-report">Reporte</span>
     </button>
-    <button class="bar-btn danger" onclick="confirmReset()">
-      <span class="bar-btn-icon">🗑️</span>
+    <button class="bar-btn danger" onclick="confirmReset()" aria-label="Reiniciar conteo (acción irreversible)" id="barBtnReset">
+      <span class="bar-btn-icon" aria-hidden="true">🗑️</span>
       <span class="bar-btn-label" id="lbl-reset">Reset</span>
     </button>
   </div>
@@ -660,13 +727,13 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 <div class="modal-overlay" id="voiceModal">
   <div class="modal-sheet">
     <div class="modal-pill"></div>
-    <div class="modal-title" id="voiceTitle">🎙️ Dictado de Voz</div>
+    <div class="modal-title" id="voiceTitle"><span aria-hidden="true">🎙️</span> Dictado de Voz</div>
     <div class="voice-input-wrap" id="voiceWrap">
       <input type="text" id="voiceInput" class="voice-input"
         placeholder="Escribe o activa el micrófono del teclado"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
       <span class="voice-status" id="voiceStatus">—</span>
-      <button class="voice-clear" onclick="clearVoice()">×</button>
+      <button class="voice-clear" onclick="clearVoice()" aria-label="Borrar texto">×</button>
     </div>
     <p class="voice-hint" id="voiceHint"></p>
     <div class="voice-chips" id="voiceChips"></div>
@@ -686,11 +753,11 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
     <div class="report-stats" id="reportStats"></div>
     <table class="report-table">
       <thead><tr>
-        <th id="th-cat">Categoría</th>
-        <th id="th-type">Tipo</th>
-        <th id="th-count">N</th>
-        <th>%</th>
-        <th id="th-per">/1000</th>
+        <th scope="col" id="th-cat">Categoría</th>
+        <th scope="col" id="th-type">Tipo</th>
+        <th scope="col" id="th-count">N</th>
+        <th scope="col">%</th>
+        <th scope="col" id="th-per">/1000</th>
       </tr></thead>
       <tbody id="reportBody"></tbody>
     </table>
@@ -704,7 +771,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 ══════════════════════ -->
 <div class="modal-overlay" id="doneModal">
   <div class="done-card">
-    <div class="done-emoji">🎉</div>
+    <div class="done-emoji" aria-hidden="true">🎉</div>
     <div class="done-title" id="doneTitle">¡META ALCANZADA!</div>
     <div class="done-sub" id="doneSub">Has contado 2000 células.<br>Guarda tu sesión para registrar los resultados.</div>
     <div class="done-actions">
@@ -721,7 +788,7 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 <div class="modal-overlay" id="exportModal">
   <div class="modal-sheet">
     <div class="modal-pill"></div>
-    <div class="modal-title" id="exportModalTitle">⬇️ EXPORTAR REPORTE</div>
+    <div class="modal-title" id="exportModalTitle"><span aria-hidden="true">⬇️</span> EXPORTAR REPORTE</div>
     <div class="export-options">
       <button class="export-fmt-btn csv" onclick="doExport('csv')">
         <span class="export-fmt-icon">📄</span>
@@ -742,8 +809,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
   </div>
 </div>
 
-<!-- TOAST -->
-<div class="toast" id="toast"></div>
+<!-- TOAST — aria-live anuncia notificaciones a lectores de pantalla -->
+<div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
 
 <script>
 // ═══════════════════════════════════════
@@ -1224,6 +1291,14 @@ function updateCounterLabels() {
   g('lbl-report').textContent= u.reportBtn;
   g('lbl-reset').textContent = u.resetBtn;
   g('lbl-voice').textContent = u.voiceBtn;
+  // Actualiza aria-labels según idioma para lectores de pantalla
+  const ariaLabels = lang === 'en'
+    ? {undo:'Undo last count', voice:'Open voice count panel', report:'View results report', reset:'Reset count (irreversible)'}
+    : {undo:'Deshacer último conteo', voice:'Abrir panel de conteo por voz', report:'Ver reporte de resultados', reset:'Reiniciar conteo (acción irreversible)'};
+  g('barBtnUndo')  && g('barBtnUndo').setAttribute('aria-label', ariaLabels.undo);
+  g('barBtnVoice') && g('barBtnVoice').setAttribute('aria-label', ariaLabels.voice);
+  g('barBtnReport')&& g('barBtnReport').setAttribute('aria-label', ariaLabels.report);
+  g('barBtnReset') && g('barBtnReset').setAttribute('aria-label', ariaLabels.reset);
 }
 
 // ═══════════════════════════════════════
