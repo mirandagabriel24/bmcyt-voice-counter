@@ -247,6 +247,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 }
 .cols-1 .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 
+/* Micronúcleo counter: desktop 26px (pane override needed since inline was removed) */
+.mn-cell-count{font-size:26px;padding:0;}
+
 /* ── TWO/THREE-PANE LAYOUT ── */
 .two-pane,.three-pane{display:flex;gap:8px;align-items:flex-start;margin-bottom:4px;}
 .pane{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px;}
@@ -329,6 +332,44 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 }
 .bar-btn.primary:active{opacity:.7;}
 .bar-btn.danger:active{border-color:var(--red);color:var(--red);}
+
+/* ── RESPONSIVE: MOBILE (< 640px) ── */
+@media (max-width:639px){
+  /* — tokens — */
+  :root{ --bar-h:72px; }
+
+  /* — bottom bar — */
+  .bottom-bar{gap:6px;padding:8px 10px env(safe-area-inset-bottom,8px);}
+  .bar-btn{min-height:56px;padding:10px 4px;gap:4px;border-radius:12px;}
+  .bar-btn-icon{font-size:22px;}
+  .bar-btn-label{font-size:11px;letter-spacing:.3px;}
+  .bar-btn.primary{flex:2;}
+
+  /* — tres columnas: columna central más ancha (Diferenciada destacada) — */
+  .two-pane,.three-pane{gap:5px;}
+  .three-pane .pane:nth-child(2){flex:1.8;}
+  .pane{gap:5px;}
+
+  /* — cards: proporción táctil correcta (cuerpo ~52px + minus 44px = 96px) — */
+  .pane .cell-btn{min-height:96px;}
+  .pane .cell-btn-body{padding:10px 10px 5px;}
+  .pane .cell-btn-name{font-size:13px;}
+  /* Todos los contadores: 20px uniforme en móvil */
+  .pane .cell-btn-count,.pane .mn-cell-count,.pane .mn-extra-val{font-size:20px;margin:4px 0 4px;}
+
+  /* — MN Extra: dos filas para usabilidad táctil — */
+  /* Fila 1: etiqueta (ancho completo)              */
+  /* Fila 2: valor | + | −  (cada uno flex:1, 44px) */
+  .pane .mn-extra-row{flex-wrap:wrap;padding:6px 8px;gap:4px;}
+  .pane .mn-extra-label{flex-basis:100%;font-size:10px;}
+  .pane .mn-kbd-badge{display:none;}
+  .pane .mn-extra-val{flex:1;font-size:20px;min-width:36px;text-align:center;}
+  .pane .mn-extra-btn{flex:1;min-height:44px;height:44px;width:auto;font-size:20px;}
+  .pane .mn-total-row{font-size:7px;padding:3px 8px 6px;gap:4px;}
+
+  /* — etiqueta de sección — */
+  .pane .section-lbl{margin-top:4px;font-size:9px;}
+}
 
 /* ══════════════════════════════════════
    VOICE MODAL (slides up from bottom)
@@ -1220,7 +1261,7 @@ function renderPane(pane) {
         <span class="kbd-badge kbd-badge-left">${kbdKey}</span>
         <div class="cell-btn-body" style="flex-direction:row;align-items:center;gap:8px;justify-content:space-between;">
           <div style="padding-left:20px"><div class="cell-btn-name">${label}</div></div>
-          <div class="cell-btn-count" id="cnt-micronucleo" style="font-size:26px;padding:0;">${state.cells.micronucleo}</div>
+          <div class="cell-btn-count mn-cell-count" id="cnt-micronucleo">${state.cells.micronucleo}</div>
         </div>
         <button class="cell-btn-minus" onclick="removeCellBtn(event,'micronucleo')">−</button>
         <div class="mn-extra-row" onclick="event.stopPropagation()">
@@ -1903,6 +1944,7 @@ document.addEventListener('keydown', e => {
   if (!g('scCounter').classList.contains('active')) return;
   if (e.target===g('voiceInput')) return;
   if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
+  if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z'){ e.preventDefault(); undoLast(); return; }
   if (e.ctrlKey||e.metaKey||e.altKey) return;
   const k = e.key.toLowerCase();
   if (activeKeyMap()[k]){ addCell(activeKeyMap()[k]); return; } // usa el mapa del idioma activo
