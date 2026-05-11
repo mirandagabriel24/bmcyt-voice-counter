@@ -192,24 +192,24 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);
 }
 
 /* Wide card (cols-2) */
-.cols-2 .cell-btn{min-height:120px;}
+.cols-2 .cell-btn{min-height:200px;}
 .cols-2 .cell-btn-body{
   flex:1;display:flex;flex-direction:row;
-  justify-content:space-between;padding:10px 12px 6px;
+  justify-content:space-between;padding:14px 14px 8px;
 }
-.cols-2 .cell-btn-name{font-size:10px;font-weight:700;color:var(--text);line-height:1.3;}
+.cols-2 .cell-btn-name{font-size:12px;font-weight:700;color:var(--text);line-height:1.3;}
 .cols-2 .cell-btn-tag{font-size:8px;color:var(--muted);margin-top:2px;text-transform:uppercase;letter-spacing:.5px;}
 .cols-2 .cell-btn-count{
-  font-family:var(--mono);font-size:20px;font-weight:700;
-  color:var(--cc);line-height:1;margin:4px 0 8px;
+  font-family:var(--mono);font-size:24px;font-weight:700;
+  color:var(--cc);line-height:1;margin:6px 0 10px;
 }
 .cols-2 .cell-btn-minus{
   border-top:1px solid var(--border);
-  padding:8px;text-align:center;
+  padding:12px;text-align:center;
   font-size:18px;color:var(--muted);font-family:var(--mono);
   background:transparent;border:none;border-top:1px solid var(--border);
   cursor:pointer;touch-action:manipulation;width:100%;
-  min-height:40px;display:flex;align-items:center;justify-content:center;
+  min-height:52px;display:flex;align-items:center;justify-content:center;
 }
 .cols-2 .cell-btn-minus:active{background:rgba(239,68,68,.12);color:var(--red);}
 
@@ -1802,11 +1802,22 @@ function parseImportedXLSX(buffer) {
 // ═══════════════════════════════════════
 // KEYBOARD SHORTCUTS (desktop / BT keyboards)
 // ═══════════════════════════════════════
-const KEY_MAP={' ':'diferenciada','a':'basal','s':'micronucleo','d':'nbud',
-               'f':'binucleada','j':'cromatina','k':'cariorrexis','l':'picnosis','ñ':'cariolisis'};
 
-// Reverse mapping for display
-const CELL_TO_KEY = Object.entries(KEY_MAP).reduce((acc, [k, v]) => {
+// Teclado español 
+const KEY_MAP_ES = {' ':'diferenciada','a':'basal','s':'micronucleo','d':'nbud',
+                    'f':'binucleada','j':'cromatina','k':'cariorrexis','l':'picnosis','ñ':'cariolisis'};
+
+// Teclado inglés 
+const KEY_MAP_EN = {' ':'diferenciada','a':'basal','s':'micronucleo','d':'nbud',
+                    'f':'binucleada','j':'cromatina','k':'cariorrexis','l':'picnosis',';':'cariolisis'};
+
+// Alias activo según el idioma seleccionado (lang se define en init())
+const KEY_MAP = KEY_MAP_ES; // fallback; el listener usa activeKeyMap() en tiempo real
+
+const activeKeyMap = () => lang === 'en' ? KEY_MAP_EN : KEY_MAP_ES;
+
+// Reverse mapping para mostrar la letra en las tarjetas (basado en el mapa activo al cargar)
+const CELL_TO_KEY = Object.entries(KEY_MAP_ES).reduce((acc, [k, v]) => {
   const displayKey = k === ' ' ? 'SPACE' : k.toUpperCase();
   acc[v] = displayKey;
   return acc;
@@ -1819,7 +1830,7 @@ document.addEventListener('keydown', e => {
   if (e.target.tagName==='INPUT'||e.target.tagName==='TEXTAREA') return;
   if (e.ctrlKey||e.metaKey||e.altKey) return;
   const k = e.key.toLowerCase();
-  if (KEY_MAP[k]){ addCell(KEY_MAP[k]); return; }
+  if (activeKeyMap()[k]){ addCell(activeKeyMap()[k]); return; } // usa el mapa del idioma activo
   if (k==='q'){ addMNExtra(); return; }
   if (k==='z') undoLast();
 });
